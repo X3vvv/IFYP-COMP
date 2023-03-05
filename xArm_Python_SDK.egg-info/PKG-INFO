@@ -1,0 +1,10 @@
+Metadata-Version: 2.1
+Name: xArm-Python-SDK
+Version: 1.11.6
+Summary: Python SDK for xArm
+Author: Vinman
+Author-email: vinman@ufactory.cc
+License: MIT
+License-File: LICENSE
+
+long description for xArm-Python-SDK
