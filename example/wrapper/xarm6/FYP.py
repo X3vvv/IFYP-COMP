@@ -27,6 +27,9 @@ import traceback
 import SpeechToText
 import pyttsx3
 import test
+import openai
+
+openai.api_key_path = r"D:\OneDrive - The Hong Kong Polytechnic University\Interests\cloud_Codes\Python\openai_api_key"
 
 
 def pprint(*args, **kwargs):
@@ -102,6 +105,24 @@ def init_arm_position():
         if code != 0:
             params["quit"] = True
             pprint("set_gripper_position, code={}".format(code))
+
+
+def ask_chatgpt(prompt: str):
+    """Fetch reply for `prompt` from ChatGPT."""
+
+    print("Connecting to ChatGPT...")
+
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": prompt},
+        ],
+    )
+
+    text_response = response["choices"][0]["message"]["content"]
+
+    return text_response
 
 
 def speak(text):
@@ -223,7 +244,7 @@ def write():
                                 speed=params["speed"],
                                 mvacc=params["acc"],
                                 radius=-1.0,
-                                wait=True
+                                wait=True,
                             )
                             if code != 0:
                                 params["quit"] = True
@@ -378,9 +399,7 @@ arm.set_mode(0)
 arm.set_state(0)
 if arm.error_code != 0:
     raise Exception(
-        "Error code: {}, check `./xarm_api_code.md` for explaination.".format(
-            arm.error_code
-        )
+        f"Error code: {arm.error_code}, check `./xarm_api_code.md` for explaination."
     )
 time.sleep(1)
 
@@ -397,10 +416,12 @@ params = {
 }
 
 try:
+    speak("Hi, I'm xArm. What can I do for you?")
     # Word spliter function demonstration
     while True:
-        speak("Say your command!")
+        speak("What can I do for you?")
         word = SpeechToText.main()
+        word = ask_chatgpt(word)
         word = word.replace(" ", "_")
         if word == "quit":
             speak("Bye!")
