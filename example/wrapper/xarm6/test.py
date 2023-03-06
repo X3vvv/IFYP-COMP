@@ -1,19 +1,17 @@
-import textwrap
-import os
+class A(object):
+    def __init__(self, *args, **kwargs):
+        print("Init A.")
+        self.text = "I'm A."
 
-write = "Write [hello world]"
-paint = "paint"
-erase = "erase"
-quit = "quit"
 
-ret_list = [write, paint, erase, quit]
+class B(object):
+    def __init__(self, *args, **kwargs):
+        print("Init B.")
+        self.a = A()
+        a = self.a
 
-for ret in ret_list:
-    cmd = ret.lower().split(" ")[0]
-    print(cmd)
+        a.text = "I'm modified by B"
 
-    if cmd == "write":
-        kw_start_idx = ret.find("[") + 1
-        kw_end_idx = ret.find("]")
-        kw = ret.lower()[kw_start_idx : kw_end_idx]
-        print(kw)
+
+b = B()
+print(b.a.text)
