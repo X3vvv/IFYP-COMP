@@ -835,11 +835,9 @@ def main():
     while True:
         user_words = SpeechToText.main()
         pprint("You said: {}".format(user_words))
-        # user_words = "stop it"
 
         # Ask ChatGPT to generate a command
         command, cmd_param = get_command(user_words)
-        # command = user_words
 
         if command == QUIT_COMMAND:
             pprint("Quiting the system...")
