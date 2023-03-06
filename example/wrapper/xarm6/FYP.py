@@ -28,6 +28,7 @@ import SpeechToText
 import pyttsx3
 import test
 import openai
+import textwrap
 
 openai.api_key_path = r"D:\OneDrive - The Hong Kong Polytechnic University\Interests\cloud_Codes\Python\openai_api_key"
 
@@ -197,76 +198,66 @@ def write():
                 pprint("set_servo_angle, code={}".format(code))
 
     def writing():
-        while params["variables"]["Center_x"] <= 3:
-            while params["variables"]["Center_y"] <= 8:
-                # Run gcode here
-                if not params["quit"]:
-                    if user_words_idx < user_words_len:
-                        letter = word[user_words_idx]
-                        # Upper case
-                        if ord(letter) >= 65 and ord(letter) <= 90:
-                            file_name = ".\\Letters\\" + letter + ".nc"
-                        # Lower case
-                        else:
-                            file_name = ".\\sletter\\" + letter + ".nc"
 
-                        if not params["quit"]:
-                            params["variables"]["Offset_x"] = (
-                                params["variables"].get("Center_x", 0) * -40
-                            )
-                            params["variables"]["Offset_y"] = (
-                                params["variables"].get("Center_y", 0) * -25
-                            )
-                            print("Offset X:" + str(params["variables"]["Offset_x"]))
-                            print("Offset Y:" + str(params["variables"]["Offset_y"]))
+        def move_arm_to_next_position():
+            # Change offset to prepare moving to next letter
+            if not params["quit"]:
+                params["variables"]["Offset_x"] = (
+                    params["variables"].get("Center_x", 0) * -40
+                )
+                params["variables"]["Offset_y"] = (
+                    params["variables"].get("Center_y", 0) * -25
+                )
+                print("Offset X:" + str(params["variables"]["Offset_x"]))
+                print("Offset Y:" + str(params["variables"]["Offset_y"]))
 
-                            arm.set_world_offset(
-                                [
-                                    params["variables"].get("Offset_x", 0),
-                                    params["variables"].get("Offset_y", 0),
-                                    0,
-                                    0,
-                                    0,
-                                    0,
-                                ]
-                            )  # x(-40) y(-20) z
-                            arm.set_state(0)
-                            time.sleep(0.5)
-                        # if arm.error_code == 0 and not params['quit']:
-                        #    code = arm.set_position(*[180.0, -105.0, 270.3, -178.8, -1.1, -43.6], speed=params['speed'],
-                        #                            mvacc=params['acc'], radius=-1.0, wait=True)
-                        #    if code != 0:
-                        #        params['quit'] = True
-                        #        pprint('set_position, code={}'.format(code))
-                        if arm.error_code == 0 and not params["quit"]:
-                            code = arm.set_position(
-                                *[180.0, -105.0, 245.0, -178.8, -1.1, -43.6],
-                                speed=params["speed"],
-                                mvacc=params["acc"],
-                                radius=-1.0,
-                                wait=True,
-                            )
-                            if code != 0:
-                                params["quit"] = True
-                                pprint("set_position, code={}".format(code))
+                arm.set_world_offset(
+                    [
+                        params["variables"].get("Offset_x", 0),
+                        params["variables"].get("Offset_y", 0),
+                        0,
+                        0,
+                        0,
+                        0,
+                    ]
+                )  # x(-40) y(-20) z
+                arm.set_state(0)
+                time.sleep(0.5)
 
-                        # here
-                        arm.run_gcode_file(path=file_name)
-                        if letter == "_":
-                            time.sleep(0)
-                        else:
-                            time.sleep(5)
+            # Move arm to next letter position
+            if arm.error_code == 0 and not params["quit"]:
+                code = arm.set_position(
+                    *[180.0, -105.0, 245.0, -178.8, -1.1, -43.6],
+                    speed=params["speed"],
+                    mvacc=params["acc"],
+                    radius=-1.0,
+                    wait=True,
+                )
+                if code != 0:
+                    params["quit"] = True
+                    pprint("set_position, code={}".format(code))
 
-                        user_words_idx = user_words_idx + 1
-                    else:
-                        params["variables"]["Center_x"] = 3
-                        params["variables"]["Center_y"] = 8
+        def run_gcode(letter):
+            folder_name = "Letters" if letter.isupper() else "sletter"
+            file_name = ".\\{}\\{}.nc".format(folder_name, letter)
+            arm.run_gcode_file(path=file_name)
+            if letter == "_":
+                time.sleep(0)
+            else:
+                time.sleep(5)
 
-                    params["variables"]["Center_y"] = (
-                        params["variables"]["Center_y"] + 1
-                    )
-            params["variables"]["Center_x"] = params["variables"]["Center_x"] + 1
-            params["variables"]["Center_y"] = 0
+        for letter in word:
+            if not params["quit"]:
+                move_arm_to_next_position()
+                run_gcode(letter)
+                params["variables"]["Center_y"] += 1
+                if params["variables"]["Center_y"] > 8:
+                    params["variables"]["Center_x"] += 1
+                    params["variables"]["Center_y"] = 0
+                if params["variables"]["Center_x"] > 3:
+                    print("Excess word length limit")
+                    break
+
 
     def place_back_pen():
         if not params["quit"]:
