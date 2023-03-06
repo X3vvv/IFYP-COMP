@@ -30,6 +30,7 @@ import paint_photo
 import openai
 import textwrap
 import atexit
+import random
 
 openai.api_key_path = r"D:\OneDrive - The Hong Kong Polytechnic University\Interests\cloud_Codes\Python\openai_api_key"
 
@@ -89,7 +90,7 @@ def connect_changed_callback(data):
 
 def init_arm_position():
     if arm.error_code != 0:
-        print("Arm has error, cannot init arm position.")
+        pprint("Arm has error, cannot init arm position.")
         return
     if arm.error_code == 0 and not params["quit"]:
         code = arm.set_servo_angle(
@@ -109,15 +110,23 @@ def init_arm_position():
             pprint("set_gripper_position, code={}".format(code))
 
 
-def ask_chatgpt(prompt: str):
+def ask_chatgpt(prompt: str) -> str:
     """Fetch reply for `prompt` from ChatGPT."""
 
-    print("Connecting to ChatGPT...")
+    pprint("Connecting to ChatGPT...")
+
+    chatGPT_pretrain_filepath = "chatGPT-pretrain.txt"
+    if not os.path.exists(chatGPT_pretrain_filepath):
+        raise FileNotFoundError("File chatGPT-pretrain.txt doesn't exist.")
+    with open(chatGPT_pretrain_filepath, "r") as f:
+        pretrain_prompt = f.read()
+
+    # print(pretrain_prompt)
 
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "system", "content": pretrain_prompt},
             {"role": "user", "content": prompt},
         ],
     )
@@ -127,11 +136,35 @@ def ask_chatgpt(prompt: str):
     return text_response
 
 
+def get_command(user_input: str):
+    """Extract command from user input with the help of ChatGPT. Return the command and its arguments."""
+
+    reply = ask_chatgpt(user_input)
+    last_line = reply.lower().split("\n")[-1]  # last line is the command sentence
+    last_word = last_line.split(" ")[-1]  # last word of last line is the command
+    cmd = last_line.split(" ")[0]  # first word of last line is the command
+    pprint("ChatGPT: {}\nInterpreted command: {}".format(reply, cmd))
+
+    if cmd == WRITE_COMMAND:  # if last_line is "write [keywords]", return keywords
+        kw_start_idx = reply.find("[") + 1
+        kw_end_idx = reply.find("]")
+        keywords = reply.lower()[kw_start_idx:kw_end_idx]
+        return WRITE_COMMAND, keywords
+    elif cmd == ERASE_COMMAND:  # if last_line is "erase", return "erase"
+        return ERASE_COMMAND, None
+    elif cmd == PAINT_COMMAND:  # if last_line is "paint", return "paint
+        return PAINT_COMMAND, None
+    elif cmd == QUIT_COMMAND:  # if last_line is "quit", return "quit"
+        return QUIT_COMMAND, None
+    else:
+        return NORMAL_CHAT_COMMAND, reply
+
+
 def speak(text, end="\n"):
     engine = pyttsx3.init()
     engine.setProperty("voice", "en")
     engine.say(text)
-    print(text, end=end)
+    pprint("xArm: " + text, end=end)
     engine.runAndWait()
 
 
@@ -543,8 +576,8 @@ def write(text: str):
                 params["variables"]["Offset_y"] = (
                     params["variables"].get("Center_y", 0) * -25
                 )
-                # print("Offset X:" + str(params["variables"]["Offset_x"]))
-                # print("Offset Y:" + str(params["variables"]["Offset_y"]))
+                # pprint("Offset X:" + str(params["variables"]["Offset_x"]))
+                # pprint("Offset Y:" + str(params["variables"]["Offset_y"]))
 
                 arm.set_world_offset(
                     [
@@ -592,7 +625,7 @@ def write(text: str):
             # go to next line and move arm to the first pos
             if not params["quit"]:
                 if params["variables"]["Center_x"] >= 3:  # reach end of whiteboard
-                    print("Whiteboard is full")
+                    pprint("Whiteboard is full")
                     WHITEBOARD_IS_FULL = True
                     break
                 params["variables"]["Center_x"] += 1  # go to next line
@@ -714,25 +747,13 @@ def write(text: str):
         writing()
         place_back_pen()
 
-    speak("Finish writing!")
 
-
-def cleanup():
-    """Clean up the arm configurations."""
-    print("Cleaning up before exiting...")
-    # Init arm position
-    init_arm_position()
-    # release all event
-    if hasattr(arm, "release_count_changed_callback"):
-        arm.release_count_changed_callback(count_changed_callback)
-    arm.release_error_warn_changed_callback(state_changed_callback)
-    arm.release_state_changed_callback(state_changed_callback)
-    arm.release_connect_changed_callback(error_warn_change_callback)
-
-
-def main():
+def init_system():
+    """Initialize program."""
     global arm, variables, params, WHITEBOARD_IS_FULL
+    global WRITE_COMMAND, ERASE_COMMAND, PAINT_COMMAND, QUIT_COMMAND, NORMAL_CHAT_COMMAND
 
+    pprint("Initializing system...")
     pprint("xArm-Python-SDK Version:{}".format(version.__version__))
 
     arm = XArmAPI("192.168.1.210")
@@ -763,34 +784,95 @@ def main():
 
     WHITEBOARD_IS_FULL = False
 
-    speak("Hi, I'm xArm.", end=" ")
+    # Command list
+    WRITE_COMMAND = "write"
+    ERASE_COMMAND = "erase"
+    PAINT_COMMAND = "paint"
+    QUIT_COMMAND = "quit"
+    NORMAL_CHAT_COMMAND = "normal chat"
+
+
+def say_goodbye():
+    """Say goodbye to user."""
+
+    goodbye_list = [
+        "Take care and have a great day!",
+        "It was great to see you, have a good one!",
+        "Thanks for stopping by, see you soon!",
+        "Goodbye, and remember to smile!",
+        "Bye for now, and don't forget to come back and say hello again!",
+        "Farewell, and have a wonderful day!",
+        "It was lovely to chat with you, have a safe journey home!",
+        "Take it easy, and see you soon!",
+        "Have a good one, and keep spreading kindness wherever you go",
+    ]
+
+    speak(random.choice(goodbye_list))
+
+
+def cleanup():
+    """Clean up the arm configurations."""
+    pprint("Cleaning up before exiting...")
+    # Init arm position
+    init_arm_position()
+    # release all event
+    if hasattr(arm, "release_count_changed_callback"):
+        arm.release_count_changed_callback(count_changed_callback)
+    arm.release_error_warn_changed_callback(state_changed_callback)
+    arm.release_state_changed_callback(state_changed_callback)
+    arm.release_connect_changed_callback(error_warn_change_callback)
+
+
+def main():
+    """Main function."""
+
+    global WHITEBOARD_IS_FULL
+
+    init_system()
+
+    speak("Hi, I'm xArm. What can I do for you?")
     # Word spliter function demonstration
     while True:
-        speak("What can I do for you?")
         user_words = SpeechToText.main()
+        pprint("You said: {}".format(user_words))
+        # user_words = "stop it"
 
         # Ask ChatGPT to generate a command
-        # command = ask_chatgpt(user_words)
-        command = user_words
+        command, cmd_param = get_command(user_words)
+        # command = user_words
 
-        if command == "quit":
-            speak("Bye!")
+        if command == QUIT_COMMAND:
+            pprint("Quiting the system...")
+            say_goodbye()
             break
-        elif command == "erase" or WHITEBOARD_IS_FULL:
-            speak("Start erasing!")
+        elif command == ERASE_COMMAND or WHITEBOARD_IS_FULL:
+            prompt = (
+                "The whiteboard is full. I will erase it first."
+                if WHITEBOARD_IS_FULL
+                else "Start erasing!"
+            )
+            speak(prompt)
             erase()
             WHITEBOARD_IS_FULL = False
-        elif command == "paint":
+            speak("Finish erasing! What else can I do for you?")
+        elif command == PAINT_COMMAND:
             speak("Cheeze!")
             paint_photo.screen_capture()
             paint_photo.canny_edge()
             paint_photo.draw_gcode()
-        else:
+            speak("Finish painting! What else can I do for you?")
+        elif command == WRITE_COMMAND:
             speak("Start writing!")
-            # text_to_write = extract_text_to_write(command)
-            text_to_write = command
-            write(text_to_write)
+            write(cmd_param)
+            speak("Finish writing! What else can I do for you?")
+        elif command == NORMAL_CHAT_COMMAND:
+            speak(cmd_param)
+        else:
+            raise Exception("Unknown command: {}, param: {}".format(command, cmd_param))
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt as e:
+        pprint("Quit by KeyboardInterrupt")

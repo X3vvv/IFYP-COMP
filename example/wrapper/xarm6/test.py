@@ -1,20 +1,19 @@
 import textwrap
 import os
 
-text = "Hello, world testing!"
-# text = text.replace(" ", "_")
-result = textwrap.wrap(text, 9)
+write = "Write [hello world]"
+paint = "paint"
+erase = "erase"
+quit = "quit"
 
-# for word in result:
-#     for letter in word:
-#         print(letter)
-#     print("newline")
+ret_list = [write, paint, erase, quit]
 
-# print(result)
+for ret in ret_list:
+    cmd = ret.lower().split(" ")[0]
+    print(cmd)
 
-print(os.getcwd())
-
-
-# print(os.path.abspath(".\Letters\B.nc"))
-
-# IFYP-COMP\example\wrapper\xarm6\2001-move_joint.py
+    if cmd == "write":
+        kw_start_idx = ret.find("[") + 1
+        kw_end_idx = ret.find("]")
+        kw = ret.lower()[kw_start_idx : kw_end_idx]
+        print(kw)
