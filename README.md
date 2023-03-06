@@ -23,11 +23,11 @@ Install is not necessary, you can run examples without installation.Only Python3
   python setup.py install
   ```
   
-  
 - other steps
 
   1. Go to Google Cloud Platform, [create and download service account key](https://cloud.google.com/iam/docs/keys-create-delete) (usually a json file), add the path to the service account key file to system PATH.
   2. Install [gcloud](https://cloud.google.com/sdk/docs/install?hl=zh-cn)
+  3. Get an OpenAI API key from your OpenAI account and change the API key file path in the program into your own.
 
 ## Doc
 - #### [API Document](doc/api/xarm_api.md)
