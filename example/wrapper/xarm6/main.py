@@ -88,28 +88,6 @@ def connect_changed_callback(data):
         arm.release_connect_changed_callback(error_warn_change_callback)
 
 
-def init_arm_position():
-    if arm.error_code != 0:
-        pprint("Arm has error, cannot init arm position.")
-        return
-    if arm.error_code == 0 and not params["quit"]:
-        code = arm.set_servo_angle(
-            angle=[3.1, -79.9, 2.8, -0.1, 76.5, 49.5],
-            speed=params["angle_speed"],
-            mvacc=params["angle_acc"],
-            wait=True,
-            radius=-1.0,
-        )
-        if code != 0:
-            params["quit"] = True
-            pprint("set_servo_angle, code={}".format(code))
-    if arm.error_code == 0 and not params["quit"]:
-        code = arm.set_gripper_position(0, wait=True, speed=5000, auto_enable=True)
-        if code != 0:
-            params["quit"] = True
-            pprint("set_gripper_position, code={}".format(code))
-
-
 def ask_chatgpt(prompt: str) -> str:
     """Fetch reply for `prompt` from ChatGPT."""
 
@@ -166,6 +144,89 @@ def speak(text, end="\n"):
     engine.say(text)
     pprint("xArm: " + text, end=end)
     engine.runAndWait()
+
+
+def init_arm_position():
+    if arm.error_code != 0:
+        pprint("Arm has error, cannot init arm position.")
+        return
+    if arm.error_code == 0 and not params["quit"]:
+        code = arm.set_servo_angle(
+            angle=[3.1, -79.9, 2.8, -0.1, 76.5, 49.5],
+            speed=params["angle_speed"],
+            mvacc=params["angle_acc"],
+            wait=True,
+            radius=-1.0,
+        )
+        if code != 0:
+            params["quit"] = True
+            pprint("set_servo_angle, code={}".format(code))
+    if arm.error_code == 0 and not params["quit"]:
+        code = arm.set_gripper_position(0, wait=True, speed=5000, auto_enable=True)
+        if code != 0:
+            params["quit"] = True
+            pprint("set_gripper_position, code={}".format(code))
+
+
+def grab_pen():
+    if arm.error_code == 0 and not params["quit"]:
+        code = arm.set_servo_angle(
+            angle=[43.6, -25.0, -29.6, -0.6, 54.4, 90.2],
+            speed=params["angle_speed"],
+            mvacc=params["angle_acc"],
+            wait=True,
+            radius=-1.0,
+        )
+        if code != 0:
+            params["quit"] = True
+            pprint("set_servo_angle, code={}".format(code))
+    if arm.error_code == 0 and not params["quit"]:
+        code = arm.set_gripper_position(213, wait=True, speed=5000, auto_enable=True)
+        if code != 0:
+            params["quit"] = True
+            pprint("set_gripper_position, code={}".format(code))
+    if arm.error_code == 0 and not params["quit"]:
+        code = arm.set_servo_angle(
+            angle=[43.5, -14.9, -23.6, -0.8, 38.3, 90.4],
+            speed=params["angle_speed"],
+            mvacc=params["angle_acc"],
+            wait=True,
+            radius=-1.0,
+        )
+        if code != 0:
+            params["quit"] = True
+            pprint("set_servo_angle, code={}".format(code))
+    if not params["quit"]:
+        arm.set_tcp_load(0.82, [0, 0, 48])
+    if arm.error_code == 0 and not params["quit"]:
+        code = arm.set_gripper_position(95, wait=True, speed=5000, auto_enable=True)
+        if code != 0:
+            params["quit"] = True
+            pprint("set_gripper_position, code={}".format(code))
+    if not params["quit"]:
+        arm.set_tcp_load(0, [0, 0, 0])
+    if arm.error_code == 0 and not params["quit"]:
+        code = arm.set_servo_angle(
+            angle=[43.6, -25.0, -29.6, -0.6, 54.4, 90.2],
+            speed=params["angle_speed"],
+            mvacc=params["angle_acc"],
+            wait=True,
+            radius=-1.0,
+        )
+        if code != 0:
+            params["quit"] = True
+            pprint("set_servo_angle, code={}".format(code))
+    if arm.error_code == 0 and not params["quit"]:
+        code = arm.set_servo_angle(
+            angle=[3.1, -79.9, 2.8, -0.1, 76.5, 49.5],
+            speed=params["angle_speed"],
+            mvacc=params["angle_acc"],
+            wait=True,
+            radius=-1.0,
+        )
+        if code != 0:
+            params["quit"] = True
+            pprint("set_servo_angle, code={}".format(code))
 
 
 def erase():
@@ -501,69 +562,13 @@ def erase():
     put_back_eraser()
 
 
-def write(text: str):
-    def grab_pen():
-        if arm.error_code == 0 and not params["quit"]:
-            code = arm.set_servo_angle(
-                angle=[43.6, -25.0, -29.6, -0.6, 54.4, 90.2],
-                speed=params["angle_speed"],
-                mvacc=params["angle_acc"],
-                wait=True,
-                radius=-1.0,
-            )
-            if code != 0:
-                params["quit"] = True
-                pprint("set_servo_angle, code={}".format(code))
-        if arm.error_code == 0 and not params["quit"]:
-            code = arm.set_gripper_position(
-                213, wait=True, speed=5000, auto_enable=True
-            )
-            if code != 0:
-                params["quit"] = True
-                pprint("set_gripper_position, code={}".format(code))
-        if arm.error_code == 0 and not params["quit"]:
-            code = arm.set_servo_angle(
-                angle=[43.5, -14.9, -23.6, -0.8, 38.3, 90.4],
-                speed=params["angle_speed"],
-                mvacc=params["angle_acc"],
-                wait=True,
-                radius=-1.0,
-            )
-            if code != 0:
-                params["quit"] = True
-                pprint("set_servo_angle, code={}".format(code))
-        if not params["quit"]:
-            arm.set_tcp_load(0.82, [0, 0, 48])
-        if arm.error_code == 0 and not params["quit"]:
-            code = arm.set_gripper_position(95, wait=True, speed=5000, auto_enable=True)
-            if code != 0:
-                params["quit"] = True
-                pprint("set_gripper_position, code={}".format(code))
-        if not params["quit"]:
-            arm.set_tcp_load(0, [0, 0, 0])
-        if arm.error_code == 0 and not params["quit"]:
-            code = arm.set_servo_angle(
-                angle=[43.6, -25.0, -29.6, -0.6, 54.4, 90.2],
-                speed=params["angle_speed"],
-                mvacc=params["angle_acc"],
-                wait=True,
-                radius=-1.0,
-            )
-            if code != 0:
-                params["quit"] = True
-                pprint("set_servo_angle, code={}".format(code))
-        if arm.error_code == 0 and not params["quit"]:
-            code = arm.set_servo_angle(
-                angle=[3.1, -79.9, 2.8, -0.1, 76.5, 49.5],
-                speed=params["angle_speed"],
-                mvacc=params["angle_acc"],
-                wait=True,
-                radius=-1.0,
-            )
-            if code != 0:
-                params["quit"] = True
-                pprint("set_servo_angle, code={}".format(code))
+def paint():
+    paint_photo.screen_capture()
+    paint_photo.canny_edge()
+    paint_photo.draw_gcode()
 
+
+def write(text: str):
     def writing():
         global WHITEBOARD_IS_FULL
 
@@ -706,32 +711,6 @@ def write(text: str):
                 params["quit"] = True
                 pprint("set_servo_angle, code={}".format(code))
 
-    # Register error/warn changed callback
-    arm.register_error_warn_changed_callback(error_warn_change_callback)
-
-    # Register state changed callback
-    arm.register_state_changed_callback(state_changed_callback)
-
-    # Register counter value changed callback
-    if hasattr(arm, "register_count_changed_callback"):
-        arm.register_count_changed_callback(count_changed_callback)
-
-    # Register connect changed callback
-    arm.register_connect_changed_callback(connect_changed_callback)
-
-    # Settings
-    if not params["quit"]:
-        params["speed"] = 100
-    if not params["quit"]:
-        params["acc"] = 2000
-    if not params["quit"]:
-        params["variables"]["Center_x"] = 1
-    if not params["quit"]:
-        params["variables"]["Center_y"] = 1
-    if not params["quit"]:
-        params["variables"]["Offset_x"] = params["variables"].get("Center_x", 0) * -40
-    if not params["quit"]:
-        params["variables"]["Offset_y"] = params["variables"].get("Center_y", 0) * -25
     if not params["quit"]:
         arm.set_world_offset([0, 0, 0, 0, 0, 0])
         arm.set_state(0)
@@ -756,6 +735,7 @@ def init_system():
     pprint("Initializing system...")
     pprint("xArm-Python-SDK Version:{}".format(version.__version__))
 
+    # Initialize arm
     arm = XArmAPI("192.168.1.210")
     arm.clean_warn()
     arm.clean_error()
@@ -780,7 +760,32 @@ def init_system():
         "quit": False,
     }
 
-    atexit.register(cleanup)  # register cleanup function to run before program exit
+    # register cleanup function to run before program exit
+    atexit.register(cleanup)
+
+    # Register error/warn changed callback
+    arm.register_error_warn_changed_callback(error_warn_change_callback)
+    # Register state changed callback
+    arm.register_state_changed_callback(state_changed_callback)
+    # Register counter value changed callback
+    if hasattr(arm, "register_count_changed_callback"):
+        arm.register_count_changed_callback(count_changed_callback)
+    # Register connect changed callback
+    arm.register_connect_changed_callback(connect_changed_callback)
+
+    # Settings
+    if not params["quit"]:
+        params["speed"] = 100
+    if not params["quit"]:
+        params["acc"] = 2000
+    if not params["quit"]:
+        params["variables"]["Center_x"] = 1
+    if not params["quit"]:
+        params["variables"]["Center_y"] = 1
+    if not params["quit"]:
+        params["variables"]["Offset_x"] = params["variables"].get("Center_x", 0) * -40
+    if not params["quit"]:
+        params["variables"]["Offset_y"] = params["variables"].get("Center_y", 0) * -25
 
     WHITEBOARD_IS_FULL = False
 
@@ -855,9 +860,7 @@ def main():
             speak("Finish erasing! What else can I do for you?")
         elif command == PAINT_COMMAND:
             speak("Cheeze!")
-            paint_photo.screen_capture()
-            paint_photo.canny_edge()
-            paint_photo.draw_gcode()
+            paint()
             speak("Finish painting! What else can I do for you?")
         elif command == WRITE_COMMAND:
             speak("Start writing!")
