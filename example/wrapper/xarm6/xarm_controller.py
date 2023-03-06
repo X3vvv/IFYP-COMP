@@ -133,101 +133,19 @@ class XArmCtrler(object):
             )
             self.arm.release_connect_changed_callback(self.error_warn_change_callback)
 
-    def init_location_and_gripper(self):
-        """
-        Move above whiteboard and close gripper.
-        """
-        arm = self.arm
-        params = self.params
-        # Move above whiteboard
-        if arm.error_code == 0 and not params["quit"]:
-            code = arm.set_servo_angle(
-                angle=[3.1, -79.9, 2.8, -0.1, 76.5, 49.5],
-                speed=params["angle_speed"],
-                mvacc=params["angle_acc"],
-                wait=False,
-                radius=-1.0,
-            )
-            if code != 0:
-                params["quit"] = True
-                pprint("set_servo_angle, code={}".format(code))
-        # Close gripper
-        if arm.error_code == 0 and not params["quit"]:
-            code = arm.set_gripper_position(0, wait=True, speed=5000, auto_enable=True)
-            if code != 0:
-                params["quit"] = True
-                pprint("set_gripper_position, code={}".format(code))
+    def set_tcp_load(self, weight, center_of_gravity):
+        """Set TCP payload as the Gripper and the object."""
+        if not self.params["quit"]:
+            self.arm.set_tcp_load(weight, center_of_gravity)
 
-    def grab_pen(self):
-        """Grab pen."""
-        arm = self.arm
-        params = self.params
-        # Move to above of pen
-        if arm.error_code == 0 and not params["quit"]:
-            code = arm.set_servo_angle(
-                angle=[43.6, -25.0, -29.6, -0.6, 54.4, 90.2],
-                speed=params["angle_speed"],
-                mvacc=params["angle_acc"],
-                wait=True,
-                radius=-1.0,
+    def set_gripper_position(self, pos):
+        if self.arm.error_code == 0 and not self.params["quit"]:
+            code = self.arm.set_gripper_position(
+                pos, wait=True, speed=5000, auto_enable=True
             )
             if code != 0:
-                params["quit"] = True
-                pprint("set_servo_angle, code={}".format(code))
-        # Open gripper
-        if arm.error_code == 0 and not params["quit"]:
-            code = arm.set_gripper_position(
-                213, wait=True, speed=5000, auto_enable=True
-            )
-            if code != 0:
-                params["quit"] = True
+                self.params["quit"] = True
                 pprint("set_gripper_position, code={}".format(code))
-        # Move down gripper to surround pen
-        if arm.error_code == 0 and not params["quit"]:
-            code = arm.set_servo_angle(
-                angle=[43.5, -14.9, -23.6, -0.8, 38.3, 90.4],
-                speed=params["angle_speed"],
-                mvacc=params["angle_acc"],
-                wait=True,
-                radius=-1.0,
-            )
-            if code != 0:
-                params["quit"] = True
-                pprint("set_servo_angle, code={}".format(code))
-        if not params["quit"]:  # Set TCP payload as the Gripper and the object
-            arm.set_tcp_load(0.82, [0, 0, 48])
-        # Close gripper
-        if arm.error_code == 0 and not params["quit"]:
-            code = arm.set_gripper_position(95, wait=True, speed=5000, auto_enable=True)
-            if code != 0:
-                params["quit"] = True
-                pprint("set_gripper_position, code={}".format(code))
-        if not params["quit"]:  # Set TCP payload as the Gripper and the object
-            arm.set_tcp_load(0, [0, 0, 0])
-        # Move up above pen home location
-        if arm.error_code == 0 and not params["quit"]:
-            code = arm.set_servo_angle(
-                angle=[43.6, -25.0, -29.6, -0.6, 54.4, 90.2],
-                speed=params["angle_speed"],
-                mvacc=params["angle_acc"],
-                wait=True,
-                radius=-1.0,
-            )
-            if code != 0:
-                params["quit"] = True
-                pprint("set_servo_angle, code={}".format(code))
-        # Move to above whiteboard
-        if arm.error_code == 0 and not params["quit"]:
-            code = arm.set_servo_angle(
-                angle=[3.1, -79.9, 2.8, -0.1, 76.5, 49.5],
-                speed=params["angle_speed"],
-                mvacc=params["angle_acc"],
-                wait=True,
-                radius=-1.0,
-            )
-            if code != 0:
-                params["quit"] = True
-                pprint("set_servo_angle, code={}".format(code))
 
     def set_servo_angle(self, angle):
         if self.arm.error_code == 0 and not self.params["quit"]:
@@ -242,343 +160,118 @@ class XArmCtrler(object):
                 self.params["quit"] = True
                 pprint("set_servo_angle, code={}".format(code))
 
-    def grab_eraser(self):
-        arm = self.arm
-        params = self.params
-        # Move to above the eraser
-        if arm.error_code == 0 and not params["quit"]:
-            code = arm.set_servo_angle(
-                angle=[54.3, -17.5, -42.4, -0.7, 59.6, 101.1],
-                speed=params["angle_speed"],
-                mvacc=params["angle_acc"],
-                wait=False,
+    def set_position(self, args: list):
+        if self.arm.error_code == 0 and not self.params["quit"]:
+            code = self.arm.set_position(
+                *args,
+                speed=self.params["speed"],
+                mvacc=self.params["acc"],
                 radius=-1.0,
-            )
-            if code != 0:
-                params["quit"] = True
-                pprint("set_servo_angle, code={}".format(code))
-        # Open gripper
-        if arm.error_code == 0 and not params["quit"]:
-            code = arm.set_gripper_position(
-                401, wait=True, speed=5000, auto_enable=True
-            )
-            if code != 0:
-                params["quit"] = True
-                pprint("set_gripper_position, code={}".format(code))
-        # Move down gripper to surround eraser
-        if arm.error_code == 0 and not params["quit"]:
-            code = arm.set_servo_angle(
-                angle=[54.2, 5.0, -31.6, -1.3, 26.3, 101.8],
-                speed=params["angle_speed"],
-                mvacc=params["angle_acc"],
                 wait=False,
-                radius=-1.0,
             )
             if code != 0:
-                params["quit"] = True
-                pprint("set_servo_angle, code={}".format(code))
+                self.params["quit"] = True
+                pprint("set_position, code={}".format(code))
+
+    def init_location_and_gripper(self):
+        """
+        Move above whiteboard and close gripper.
+        """
+        pprint("Initializing arm location and gripper...")
+        # Move above whiteboard
+        self.set_servo_angle([3.1, -79.9, 2.8, -0.1, 76.5, 49.5])
         # Close gripper
-        if arm.error_code == 0 and not params["quit"]:
-            code = arm.set_gripper_position(
-                303, wait=True, speed=5000, auto_enable=True
-            )
-            if code != 0:
-                params["quit"] = True
-                pprint("set_gripper_position, code={}".format(code))
-        if not params["quit"]:  # Set TCP payload as the Gripper and the object
-            arm.set_tcp_load(0, [0, 0, 0])
+        self.set_gripper_position(0)
+
+    def grab_pen(self):
+        """Grab pen."""
+        pprint("Grabbing pen...")
+        # Move to above of pen
+        self.set_servo_angle([43.6, -25.0, -29.6, -0.6, 54.4, 90.2])
+        # Open gripper
+        self.set_gripper_position(213)
+        # Move down gripper to surround pen
+        self.set_servo_angle([43.5, -14.9, -23.6, -0.8, 38.3, 90.4])
+        self.set_tcp_load(0.82, [0, 0, 48])
+        # Close gripper
+        self.set_gripper_position(95)
+        self.set_tcp_load(0, [0, 0, 0])
+        # Move up above pen home location
+        self.set_servo_angle([43.6, -25.0, -29.6, -0.6, 54.4, 90.2])
+        # Move to above whiteboard
+        self.set_servo_angle([3.1, -79.9, 2.8, -0.1, 76.5, 49.5])
+
+    def grab_eraser(self):
+        pprint("Grabing eraser...")
+        # Move to above the eraser
+        self.set_servo_angle([54.3, -17.5, -42.4, -0.7, 59.6, 101.1])
+        # Open gripper
+        self.set_gripper_position(400)
+        # Move down gripper to surround eraser
+        self.set_servo_angle([54.2, 5.0, -31.6, -1.3, 26.3, 101.8])
+        # Close gripper
+        self.set_gripper_position(303)
+        self.set_tcp_load(0, [0, 0, 0])
 
     def move_eraser_to_whiteboard(self):
-        arm = self.arm
-        params = self.params
+        pprint("Moving eraser to whiteboard...")
         # Move above eraser home
-        if arm.error_code == 0 and not params["quit"]:
-            code = arm.set_servo_angle(
-                angle=[54.3, -14.2, -38.2, -0.7, 52.1, 101.2],
-                speed=params["angle_speed"],
-                mvacc=params["angle_acc"],
-                wait=False,
-                radius=-1.0,
-            )
-            if code != 0:
-                params["quit"] = True
-                pprint("set_servo_angle, code={}".format(code))
+        self.set_servo_angle([54.3, -14.2, -38.2, -0.7, 52.1, 101.2])
         # Move to above whiteboard at erasing start location
-        if arm.error_code == 0 and not params["quit"]:
-            code = arm.set_servo_angle(
-                angle=[30.9, -56.2, -12.9, -0.4, 68.6, 77.4],
-                speed=params["angle_speed"],
-                mvacc=params["angle_acc"],
-                wait=False,
-                radius=-1.0,
-            )
-            if code != 0:
-                params["quit"] = True
-                pprint("set_servo_angle, code={}".format(code))
+        self.set_servo_angle([30.9, -56.2, -12.9, -0.4, 68.6, 77.4])
 
     def clean_whiteboard(self):
-        arm = self.arm
-        params = self.params
-        if arm.error_code == 0 and not params["quit"]:
-            code = arm.set_position(
-                *[187.2, -124.6, 189.7, -179.6, -0.5, -46.4],
-                speed=params["speed"],
-                mvacc=params["acc"],
-                radius=-1.0,
-                wait=False,
-            )
-            if code != 0:
-                params["quit"] = True
-                pprint("set_position, code={}".format(code))
+        pprint("Cleaning whiteboard...")
+        self.set_position([187.2, -124.6, 189.7, -179.6, -0.5, -46.4])
         for _ in range(2):
-            if params["quit"]:
+            if self.params["quit"]:
                 break
-            if arm.error_code == 0 and not params["quit"]:
-                code = arm.set_position(
-                    *[187.2, 111.4, 188.8, -179.6, -0.5, -46.4],
-                    speed=params["speed"],
-                    mvacc=params["acc"],
-                    radius=-1.0,
-                    wait=False,
-                )
-                if code != 0:
-                    params["quit"] = True
-                    pprint("set_position, code={}".format(code))
-            if arm.error_code == 0 and not params["quit"]:
-                code = arm.set_position(
-                    *[187.2, -124.6, 189.7, -179.6, -0.5, -46.4],
-                    speed=params["speed"],
-                    mvacc=params["acc"],
-                    radius=-1.0,
-                    wait=False,
-                )
-                if code != 0:
-                    params["quit"] = True
-                    pprint("set_position, code={}".format(code))
-        if arm.error_code == 0 and not params["quit"]:
-            code = arm.set_position(
-                *[187.2, -124.6, 189.7, -179.6, -0.5, -46.4],
-                speed=params["speed"],
-                mvacc=params["acc"],
-                radius=-1.0,
-                wait=False,
-            )
-            if code != 0:
-                params["quit"] = True
-                pprint("set_position, code={}".format(code))
-        if arm.error_code == 0 and not params["quit"]:
-            code = arm.set_position(
-                *[224.5, -124.6, 189.7, -179.6, -0.5, -46.4],
-                speed=params["speed"],
-                mvacc=params["acc"],
-                radius=-1.0,
-                wait=False,
-            )
-            if code != 0:
-                params["quit"] = True
-                pprint("set_position, code={}".format(code))
+            self.set_position([187.2, 111.4, 188.8, -179.6, -0.5, -46.4])
+            self.set_position([187.2, -124.6, 189.7, -179.6, -0.5, -46.4])
+            self.set_position([224.5, -124.6, 189.7, -179.6, -0.5, -46.4])
         for _ in range(2):
-            if params["quit"]:
+            if self.params["quit"]:
                 break
-            if arm.error_code == 0 and not params["quit"]:
-                code = arm.set_position(
-                    *[224.5, 114.9, 188.7, -179.6, -0.5, -46.4],
-                    speed=params["speed"],
-                    mvacc=params["acc"],
-                    radius=-1.0,
-                    wait=False,
-                )
-                if code != 0:
-                    params["quit"] = True
-                    pprint("set_position, code={}".format(code))
-            if arm.error_code == 0 and not params["quit"]:
-                code = arm.set_position(
-                    *[224.5, -124.6, 189.7, -179.6, -0.5, -46.4],
-                    speed=params["speed"],
-                    mvacc=params["acc"],
-                    radius=-1.0,
-                    wait=False,
-                )
-                if code != 0:
-                    params["quit"] = True
-                    pprint("set_position, code={}".format(code))
-        if arm.error_code == 0 and not params["quit"]:
-            code = arm.set_position(
-                *[274.5, -121.3, 189.7, -179.6, -0.5, -46.4],
-                speed=params["speed"],
-                mvacc=params["acc"],
-                radius=-1.0,
-                wait=False,
-            )
-            if code != 0:
-                params["quit"] = True
-                pprint("set_position, code={}".format(code))
+            self.set_position([224.5, 114.9, 188.7, -179.6, -0.5, -46.4])
+            self.set_position([224.5, -124.6, 189.7, -179.6, -0.5, -46.4])
+            self.set_position([274.5, -121.3, 189.7, -179.6, -0.5, -46.4])
         for _ in range(2):
-            if params["quit"]:
+            if self.params["quit"]:
                 break
-            if arm.error_code == 0 and not params["quit"]:
-                code = arm.set_position(
-                    *[274.5, 114.9, 189.7, -179.6, -0.5, -46.4],
-                    speed=params["speed"],
-                    mvacc=params["acc"],
-                    radius=-1.0,
-                    wait=False,
-                )
-                if code != 0:
-                    params["quit"] = True
-                    pprint("set_position, code={}".format(code))
-            if arm.error_code == 0 and not params["quit"]:
-                code = arm.set_position(
-                    *[274.5, -121.3, 189.7, -179.6, -0.5, -46.4],
-                    speed=params["speed"],
-                    mvacc=params["acc"],
-                    radius=-1.0,
-                    wait=False,
-                )
-                if code != 0:
-                    params["quit"] = True
-                    pprint("set_position, code={}".format(code))
+            self.set_position([274.5, 114.9, 189.7, -179.6, -0.5, -46.4])
+            self.set_position([274.5, -121.3, 189.7, -179.6, -0.5, -46.4])
 
     def put_back_eraser(self):
-        arm = self.arm
-        params = self.params
+        pprint("Putting back eraser...")
         # Move above whiteboard eraser final cleaning location
-        if arm.error_code == 0 and not params["quit"]:
-            code = arm.set_servo_angle(
-                angle=[-23.2, -30.8, -26.6, 0.2, 56.8, 23.0],
-                speed=params["angle_speed"],
-                mvacc=params["angle_acc"],
-                wait=False,
-                radius=-1.0,
-            )
-            if code != 0:
-                params["quit"] = True
-                pprint("set_servo_angle, code={}".format(code))
+        self.set_servo_angle([-23.2, -30.8, -26.6, 0.2, 56.8, 23.0])
         # Move above the eraser home location
-        if arm.error_code == 0 and not params["quit"]:
-            code = arm.set_servo_angle(
-                angle=[54.3, -17.5, -42.4, -0.7, 59.6, 101.1],
-                speed=params["angle_speed"],
-                mvacc=params["angle_acc"],
-                wait=False,
-                radius=-1.0,
-            )
-            if code != 0:
-                params["quit"] = True
-                pprint("set_servo_angle, code={}".format(code))
+        self.set_servo_angle([54.3, -17.5, -42.4, -0.7, 59.6, 101.1])
         # Go done near the table at eraser home
-        if arm.error_code == 0 and not params["quit"]:
-            code = arm.set_servo_angle(
-                angle=[54.2, 5.0, -31.6, -1.3, 26.3, 101.8],
-                speed=params["angle_speed"],
-                mvacc=params["angle_acc"],
-                wait=False,
-                radius=-1.0,
-            )
-            if code != 0:
-                params["quit"] = True
-                pprint("set_servo_angle, code={}".format(code))
+        self.set_servo_angle([54.2, 5.0, -31.6, -1.3, 26.3, 101.8])
         # Open the gripper
-        if arm.error_code == 0 and not params["quit"]:
-            code = arm.set_gripper_position(
-                401, wait=True, speed=5000, auto_enable=True
-            )
-            if code != 0:
-                params["quit"] = True
-                pprint("set_gripper_position, code={}".format(code))
-        if not params["quit"]:  # Set TCP payload as the Gripper and the object
-            arm.set_tcp_load(0.82, [0, 0, 48])
+        self.set_gripper_position(400)
+        self.set_tcp_load(0.82, [0, 0, 48])
         # Move above eraser home
-        if arm.error_code == 0 and not params["quit"]:
-            code = arm.set_servo_angle(
-                angle=[54.3, -17.5, -42.4, -0.7, 59.6, 101.1],
-                speed=params["angle_speed"],
-                mvacc=params["angle_acc"],
-                wait=False,
-                radius=-1.0,
-            )
-            if code != 0:
-                params["quit"] = True
-                pprint("set_servo_angle, code={}".format(code))
+        self.set_servo_angle([54.3, -17.5, -42.4, -0.7, 59.6, 101.1])
 
     def put_back_pen(self):
-        arm = self.arm
-        params = self.params
-        if not params["quit"]:
-            arm.set_world_offset([0, 0, 0, 0, 0, 0])
-            arm.set_state(0)
+        pprint("Putting back pen...")
+        if not self.params["quit"]:
+            self.arm.set_world_offset([0, 0, 0, 0, 0, 0])
+            self.arm.set_state(0)
             time.sleep(0.5)
-        if arm.error_code == 0 and not params["quit"]:
-            code = arm.set_servo_angle(
-                angle=[43.6, -25.0, -29.6, -0.6, 54.4, 90.2],
-                speed=params["angle_speed"],
-                mvacc=params["angle_acc"],
-                wait=True,
-                radius=-1.0,
-            )
-            if code != 0:
-                params["quit"] = True
-                pprint("set_servo_angle, code={}".format(code))
-        if arm.error_code == 0 and not params["quit"]:
-            code = arm.set_servo_angle(
-                angle=[43.6, -19.9, -25.7, -0.7, 45.4, 90.3],
-                speed=params["angle_speed"],
-                mvacc=params["angle_acc"],
-                wait=True,
-                radius=-1.0,
-            )
-            if code != 0:
-                params["quit"] = True
-                pprint("set_servo_angle, code={}".format(code))
-        if arm.error_code == 0 and not params["quit"]:
-            code = arm.set_servo_angle(
-                angle=[43.6, -18.3, -24.9, -0.7, 43.0, 90.3],
-                speed=params["angle_speed"],
-                mvacc=params["angle_acc"],
-                wait=True,
-                radius=-1.0,
-            )
-            if code != 0:
-                params["quit"] = True
-                pprint("set_servo_angle, code={}".format(code))
-        if arm.error_code == 0 and not params["quit"]:
-            code = arm.set_gripper_position(
-                300, wait=True, speed=5000, auto_enable=True
-            )
-            if code != 0:
-                params["quit"] = True
-                pprint("set_gripper_position, code={}".format(code))
-        if not params["quit"]:
-            arm.set_tcp_load(0.82, [0, 0, 48])
-        if arm.error_code == 0 and not params["quit"]:
-            code = arm.set_servo_angle(
-                angle=[43.6, -26.6, -31.6, -0.6, 58.0, 90.2],
-                speed=params["angle_speed"],
-                mvacc=params["angle_acc"],
-                wait=True,
-                radius=-1.0,
-            )
-            if code != 0:
-                params["quit"] = True
-                pprint("set_servo_angle, code={}".format(code))
-        if arm.error_code == 0 and not params["quit"]:
-            code = arm.set_gripper_position(0, wait=True, speed=5000, auto_enable=True)
-            if code != 0:
-                params["quit"] = True
-                pprint("set_gripper_position, code={}".format(code))
-        if arm.error_code == 0 and not params["quit"]:
-            code = arm.set_servo_angle(
-                angle=[2.5, -79.7, 3.0, -0.1, 76.2, 48.9],
-                speed=params["angle_speed"],
-                mvacc=params["angle_acc"],
-                wait=True,
-                radius=-1.0,
-            )
-            if code != 0:
-                params["quit"] = True
-                pprint("set_servo_angle, code={}".format(code))
+        self.set_servo_angle([43.6, -25.0, -29.6, -0.6, 54.4, 90.2])
+        self.set_servo_angle([43.6, -19.9, -25.7, -0.7, 45.4, 90.3])
+        self.set_servo_angle([43.6, -18.3, -24.9, -0.7, 43.0, 90.3])
+        self.set_gripper_position(300)
+        self.set_tcp_load(0.82, [0, 0, 48])
+        self.set_servo_angle([43.6, -26.6, -31.6, -0.6, 58.0, 90.2])
+        self.set_gripper_position(0)
+        self.set_servo_angle([2.5, -79.7, 3.0, -0.1, 76.2, 48.9])
 
     def erase(self):
+        pprint("Erasing...")
         self.init_location_and_gripper()
         self.grab_eraser()
         self.move_eraser_to_whiteboard()
@@ -586,52 +279,42 @@ class XArmCtrler(object):
         self.put_back_eraser()
 
     def paint(self):
+        pprint("Painting...")
         paint_photo.screen_capture()
         paint_photo.canny_edge()
         paint_photo.draw_gcode()
 
     def write(self, text: str):
-        arm = self.arm
-        params = self.params
+        pprint("Writing [{}]...".format(text))
 
         def writing():
             def update_arm_position():
                 # Change offset to prepare moving to next letter
-                if not params["quit"]:
-                    params["variables"]["Offset_x"] = (
-                        params["variables"].get("Center_x", 0) * -40
+                if not self.params["quit"]:
+                    self.params["variables"]["Offset_x"] = (
+                        self.params["variables"].get("Center_x", 0) * -40
                     )
-                    params["variables"]["Offset_y"] = (
-                        params["variables"].get("Center_y", 0) * -25
+                    self.params["variables"]["Offset_y"] = (
+                        self.params["variables"].get("Center_y", 0) * -25
                     )
-                    # pprint("Offset X:" + str(params["variables"]["Offset_x"]))
-                    # pprint("Offset Y:" + str(params["variables"]["Offset_y"]))
+                    # pprint("Offset X:" + str(self.params["variables"]["Offset_x"]))
+                    # pprint("Offset Y:" + str(self.params["variables"]["Offset_y"]))
 
-                    arm.set_world_offset(
+                    self.arm.set_world_offset(
                         [
-                            params["variables"].get("Offset_x", 0),
-                            params["variables"].get("Offset_y", 0),
+                            self.params["variables"].get("Offset_x", 0),
+                            self.params["variables"].get("Offset_y", 0),
                             0,
                             0,
                             0,
                             0,
                         ]
                     )  # x(-40) y(-20) z
-                    arm.set_state(0)
+                    self.arm.set_state(0)
                     time.sleep(0.5)
 
                 # Move arm to next letter position
-                if arm.error_code == 0 and not params["quit"]:
-                    code = arm.set_position(
-                        *[180.0, -105.0, 245.0, -178.8, -1.1, -43.6],
-                        speed=params["speed"],
-                        mvacc=params["acc"],
-                        radius=-1.0,
-                        wait=True,
-                    )
-                    if code != 0:
-                        params["quit"] = True
-                        pprint("set_position, code={}".format(code))
+                self.set_position([180.0, -105.0, 245.0, -178.8, -1.1, -43.6])
 
             def write_with_gcode(character: str):
                 if not character.isalpha():  # skip non-letter characters
@@ -639,31 +322,35 @@ class XArmCtrler(object):
                     return
                 folder_name = "Letters" if character.isupper() else "sletter"
                 file_name = r".\assets\gcode\{}\{}.nc".format(folder_name, character)
-                arm.run_gcode_file(path=file_name)
+                self.arm.run_gcode_file(path=file_name)
                 time.sleep(5)
 
             lines = textwrap.wrap(text, 9)  # split text into lines
 
             for one_line in lines:  # write each line
                 for character in one_line:  # write each character
-                    if not params["quit"]:
+                    if not self.params["quit"]:
                         update_arm_position()  # move arm to next letter's position
                         write_with_gcode(
                             character
                         )  # write out the letter using gcode file
-                        params["variables"]["Center_y"] += 1  # go to next pos in line
+                        self.params["variables"][
+                            "Center_y"
+                        ] += 1  # go to next pos in line
                 # go to next line and move arm to the first pos
-                if not params["quit"]:
-                    if params["variables"]["Center_x"] >= 3:  # reach end of whiteboard
+                if not self.params["quit"]:
+                    if (
+                        self.params["variables"]["Center_x"] >= 3
+                    ):  # reach end of whiteboard
                         pprint("Whiteboard is full")
                         XArmCtrler.WHITEBOARD_IS_FULL = True
                         break
-                    params["variables"]["Center_x"] += 1  # go to next line
-                    params["variables"]["Center_y"] = 0  # go to first pos in line
+                    self.params["variables"]["Center_x"] += 1  # go to next line
+                    self.params["variables"]["Center_y"] = 0  # go to first pos in line
 
         if not self.params["quit"]:
-            arm.set_world_offset([0, 0, 0, 0, 0, 0])
-            arm.set_state(0)
+            self.arm.set_world_offset([0, 0, 0, 0, 0, 0])
+            self.arm.set_state(0)
             time.sleep(0.5)
 
             self.init_location_and_gripper()
@@ -678,13 +365,12 @@ class XArmCtrler(object):
 
     def reset_arm(self):
         """Clean up the arm configurations."""
-        pprint("Cleaning up before exiting...")
-        arm = self.arm
+        pprint("Resetting arm before exiting...")
         # Init arm position
         self.init_location_and_gripper()
         # release all event
-        if hasattr(arm, "release_count_changed_callback"):
-            arm.release_count_changed_callback(self.count_changed_callback)
-        arm.release_error_warn_changed_callback(self.state_changed_callback)
-        arm.release_state_changed_callback(self.state_changed_callback)
-        arm.release_connect_changed_callback(self.error_warn_change_callback)
+        if hasattr(self.arm, "release_count_changed_callback"):
+            self.arm.release_count_changed_callback(self.count_changed_callback)
+        self.arm.release_error_warn_changed_callback(self.state_changed_callback)
+        self.arm.release_state_changed_callback(self.state_changed_callback)
+        self.arm.release_connect_changed_callback(self.error_warn_change_callback)
