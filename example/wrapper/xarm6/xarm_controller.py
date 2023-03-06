@@ -96,6 +96,10 @@ class XArmCtrler(object):
                 self.params["variables"].get("Center_y", 0) * -25
             )
 
+    ########################
+    ### Callback functions
+    ########################
+
     def error_warn_change_callback(self, data):
         """Error/Warn changed callback"""
         if data and data["error_code"] != 0:
@@ -133,12 +137,17 @@ class XArmCtrler(object):
             )
             self.arm.release_connect_changed_callback(self.error_warn_change_callback)
 
+    ##############################
+    ### Wrapped xArm control APIs
+    ##############################
+
     def set_tcp_load(self, weight, center_of_gravity):
         """Set TCP payload as the Gripper and the object."""
         if not self.params["quit"]:
             self.arm.set_tcp_load(weight, center_of_gravity)
 
     def set_gripper_position(self, pos):
+        """Set gripper position."""
         if self.arm.error_code == 0 and not self.params["quit"]:
             code = self.arm.set_gripper_position(
                 pos, wait=True, speed=5000, auto_enable=True
@@ -148,6 +157,7 @@ class XArmCtrler(object):
                 pprint("set_gripper_position, code={}".format(code))
 
     def set_servo_angle(self, angle):
+        """Set servo angle of the arm."""
         if self.arm.error_code == 0 and not self.params["quit"]:
             code = self.arm.set_servo_angle(
                 angle=angle,
@@ -161,6 +171,7 @@ class XArmCtrler(object):
                 pprint("set_servo_angle, code={}".format(code))
 
     def set_position(self, args: list):
+        """Set position of the arm."""
         if self.arm.error_code == 0 and not self.params["quit"]:
             code = self.arm.set_position(
                 *args,
@@ -172,6 +183,10 @@ class XArmCtrler(object):
             if code != 0:
                 self.params["quit"] = True
                 pprint("set_position, code={}".format(code))
+
+    #############################
+    ### Basic Movement Functions
+    #############################
 
     def init_location_and_gripper(self):
         """
@@ -269,6 +284,10 @@ class XArmCtrler(object):
         self.set_servo_angle([43.6, -26.6, -31.6, -0.6, 58.0, 90.2])
         self.set_gripper_position(0)
         self.set_servo_angle([2.5, -79.7, 3.0, -0.1, 76.2, 48.9])
+
+    ##################################
+    ### Integrated Movement Functions
+    ##################################
 
     def erase(self):
         pprint("Erasing...")
