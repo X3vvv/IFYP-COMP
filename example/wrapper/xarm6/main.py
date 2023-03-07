@@ -94,45 +94,45 @@ def main():
     """Main function."""
     xArm = XArmCtrler("192.168.1.210")
 
-    speak("Hi, I'm xArm. What can I do for you?")
-    # Word spliter function demonstration
-    while True:
-        user_words = SpeechToText.main()
-        pprint("You said: {}".format(user_words))
+    try:
+        speak("Hi, I'm xArm. What can I do for you?")
+        # Word spliter function demonstration
+        while True:
+            user_words = SpeechToText.main()
+            pprint("You said: {}".format(user_words))
 
-        # Ask ChatGPT to generate a command
-        cmd, cmd_param = get_command(user_words)
+            # Ask ChatGPT to generate a command
+            cmd, cmd_param = get_command(user_words)
 
-        if cmd == XArmCtrler.QUIT:
-            pprint("Quiting the system...")
-            say_goodbye()
-            break
-        elif cmd == XArmCtrler.ERASE or XArmCtrler.WHITEBOARD_IS_FULL:
-            prompt = (
-                "The whiteboard is full. I will erase it first."
-                if XArmCtrler.WHITEBOARD_IS_FULL
-                else "Start erasing!"
-            )
-            speak(prompt)
-            xArm.erase()
-            XArmCtrler.WHITEBOARD_IS_FULL = False
-            speak("Finish erasing! What else can I do for you?")
-        elif cmd == XArmCtrler.PAINT:
-            speak("Cheeze!")
-            xArm.paint()
-            speak("Finish painting! What else can I do for you?")
-        elif cmd == XArmCtrler.WRITE:
-            speak("Start writing!")
-            xArm.write(cmd_param)
-            speak("Finish writing! What else can I do for you?")
-        elif cmd == XArmCtrler.NORMAL_CHAT:
-            speak(cmd_param)
-        else:
-            raise Exception("Unknown command: {}, param: {}".format(cmd, cmd_param))
+            if cmd == XArmCtrler.QUIT:
+                pprint("Quiting the system...")
+                say_goodbye()
+                break
+            elif cmd == XArmCtrler.ERASE or XArmCtrler.WHITEBOARD_IS_FULL:
+                prompt = (
+                    "The whiteboard is full. I will erase it first."
+                    if XArmCtrler.WHITEBOARD_IS_FULL
+                    else "Start erasing!"
+                )
+                speak(prompt)
+                xArm.erase()
+                XArmCtrler.WHITEBOARD_IS_FULL = False
+                speak("Finish erasing! What else can I do for you?")
+            elif cmd == XArmCtrler.PAINT:
+                speak("Cheeze!")
+                xArm.paint()
+                speak("Finish painting! What else can I do for you?")
+            elif cmd == XArmCtrler.WRITE:
+                speak("Start writing!")
+                xArm.write(cmd_param)
+                speak("Finish writing! What else can I do for you?")
+            elif cmd == XArmCtrler.NORMAL_CHAT:
+                speak(cmd_param)
+            else:
+                raise Exception("Unknown command: {}, param: {}".format(cmd, cmd_param))
+    except KeyboardInterrupt as e:
+        pprint("Quit by KeyboardInterrupt")
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except KeyboardInterrupt as e:
-        pprint("Quit by KeyboardInterrupt")
+    main()

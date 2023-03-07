@@ -37,7 +37,7 @@ class XArmCtrler(object):
     NORMAL_CHAT = "normal chat"
 
     def __init__(self, ip: str = "192.168.1.210", *args, **kwargs):
-        pprint("Initializing system...")
+        pprint("Initializing xArm Controller...")
         pprint("xArm-Python-SDK Version:{}".format(version.__version__))
 
         # Initialize arm
@@ -47,10 +47,6 @@ class XArmCtrler(object):
         self.arm.motion_enable(True)
         self.arm.set_mode(0)
         self.arm.set_state(0)
-        if self.arm.error_code != 0:
-            raise Exception(
-                f"Error code: {self.arm.error_code}, check `./xarm_api_code.md` for explaination."
-            )
         time.sleep(1)
 
         variables = {"Offset_y": 0, "Center_x": 0, "Offset_x": 0, "Center_y": 0}
@@ -188,13 +184,15 @@ class XArmCtrler(object):
     ### Basic Movement Functions
     #############################
 
-    def init_location_and_gripper(self):
+    def reset_location_and_gripper(self):
         """
         Move above whiteboard and close gripper.
         """
-        pprint("Initializing arm location and gripper...")
+        pprint("Resetting arm location and gripper...")
         # Move above whiteboard
         self.set_servo_angle([3.1, -79.9, 2.8, -0.1, 76.5, 49.5])
+        # Open gripper
+        self.set_gripper_position(410)
         # Close gripper
         self.set_gripper_position(0)
 
@@ -291,11 +289,12 @@ class XArmCtrler(object):
 
     def erase(self):
         pprint("Erasing...")
-        self.init_location_and_gripper()
+        self.reset_location_and_gripper()
         self.grab_eraser()
         self.move_eraser_to_whiteboard()
         self.clean_whiteboard()
         self.put_back_eraser()
+        self.reset_location_and_gripper()
 
     def paint(self):
         pprint("Painting...")
@@ -372,24 +371,33 @@ class XArmCtrler(object):
             self.arm.set_state(0)
             time.sleep(0.5)
 
-            self.init_location_and_gripper()
-            self.grab_pen()
+        self.reset_location_and_gripper()
+        self.grab_pen()
 
-            # Top-Left coordinate(0,0) to (2,8) reference point, modify the coordinate you want:
+        # Top-Left coordinate(0,0) to (2,8) reference point, modify the coordinate you want:
+        if not self.params["quit"]:
             self.params["variables"]["Center_x"] = 0
             self.params["variables"]["Center_y"] = 0
 
-            writing()
-            self.put_back_pen()
+        writing()
+        self.put_back_pen()
+        self.reset_location_and_gripper()
 
     def reset_arm(self):
         """Clean up the arm configurations."""
         pprint("Resetting arm before exiting...")
         # Init arm position
-        self.init_location_and_gripper()
+        self.reset_location_and_gripper()
         # release all event
         if hasattr(self.arm, "release_count_changed_callback"):
             self.arm.release_count_changed_callback(self.count_changed_callback)
         self.arm.release_error_warn_changed_callback(self.state_changed_callback)
         self.arm.release_state_changed_callback(self.state_changed_callback)
         self.arm.release_connect_changed_callback(self.error_warn_change_callback)
+
+    def quit(self):
+        """Clean up the arm configurations."""
+        pprint("Quitting...")
+        self.params["quit"] = True
+        self.reset_arm()
+        pprint("xArm disconnected")
