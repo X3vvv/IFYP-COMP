@@ -1,5 +1,6 @@
 import time
-import paint_photo
+
+import cv2
 import textwrap
 import atexit
 import traceback
@@ -28,6 +29,7 @@ def pprint(*args, **kwargs):
 class XArmCtrler(object):
     WHITEBOARD_IS_FULL = False
     AMR_IS_HOLDING_OBJECT = False
+    PAINT_GCODE_FILEPATH = "assets/gcode/others/output.nc"
 
     # Command list
     WRITE = "write"
@@ -35,6 +37,12 @@ class XArmCtrler(object):
     PAINT = "paint"
     QUIT = "quit"
     NORMAL_CHAT = "normal chat"
+
+    # Arm movement measurement size
+    GRIPPER_POSITION_OPEN = 420
+    GRIPPER_POSITION_CLOSE_PEN = 95
+    GRIPPER_POSITION_CLOSE_ERASER = 303
+    GRIPPER_POSITION_CLOSE_COMPLETELY = 0
 
     params = None
 
@@ -189,9 +197,9 @@ class XArmCtrler(object):
         # Move above whiteboard
         self.set_servo_angle([3.1, -79.9, 2.8, -0.1, 76.5, 49.5])
         # Open gripper
-        self.set_gripper_position(410)
+        self.set_gripper_position(self.GRIPPER_POSITION_OPEN)
         # Close gripper
-        self.set_gripper_position(0)
+        self.set_gripper_position(self.GRIPPER_POSITION_CLOSE_COMPLETELY)
 
     def grab_pen(self):
         """Grab pen."""
@@ -199,12 +207,12 @@ class XArmCtrler(object):
         # Move to above of pen
         self.set_servo_angle([43.6, -25.0, -29.6, -0.6, 54.4, 90.2])
         # Open gripper
-        self.set_gripper_position(213)
+        self.set_gripper_position(self.GRIPPER_POSITION_OPEN)
         # Move down gripper to surround pen
         self.set_servo_angle([43.5, -14.9, -23.6, -0.8, 38.3, 90.4])
         self.set_tcp_load(0.82, [0, 0, 48])
         # Close gripper
-        self.set_gripper_position(95)
+        self.set_gripper_position(self.GRIPPER_POSITION_CLOSE_PEN)
         self.set_tcp_load(0, [0, 0, 0])
         # Move up above pen home location
         self.set_servo_angle([43.6, -25.0, -29.6, -0.6, 54.4, 90.2])
@@ -216,11 +224,11 @@ class XArmCtrler(object):
         # Move to above the eraser
         self.set_servo_angle([54.3, -17.5, -42.4, -0.7, 59.6, 101.1])
         # Open gripper
-        self.set_gripper_position(400)
+        self.set_gripper_position(self.GRIPPER_POSITION_OPEN)
         # Move down gripper to surround eraser
         self.set_servo_angle([54.2, 5.0, -31.6, -1.3, 26.3, 101.8])
         # Close gripper
-        self.set_gripper_position(303)
+        self.set_gripper_position(self.GRIPPER_POSITION_CLOSE_ERASER)
         self.set_tcp_load(0, [0, 0, 0])
 
     def move_eraser_to_whiteboard(self):
@@ -260,7 +268,7 @@ class XArmCtrler(object):
         # Go done near the table at eraser home
         self.set_servo_angle([54.2, 5.0, -31.6, -1.3, 26.3, 101.8])
         # Open the gripper
-        self.set_gripper_position(400)
+        self.set_gripper_position(self.GRIPPER_POSITION_OPEN)
         self.set_tcp_load(0.82, [0, 0, 48])
         # Move above eraser home
         self.set_servo_angle([54.3, -17.5, -42.4, -0.7, 59.6, 101.1])
@@ -274,10 +282,100 @@ class XArmCtrler(object):
         self.set_servo_angle([43.6, -25.0, -29.6, -0.6, 54.4, 90.2])
         self.set_servo_angle([43.6, -19.9, -25.7, -0.7, 45.4, 90.3])
         self.set_servo_angle([43.6, -18.3, -24.9, -0.7, 43.0, 90.3])
-        self.set_gripper_position(300)
+        self.set_gripper_position(self.GRIPPER_POSITION_OPEN)
         self.set_tcp_load(0.82, [0, 0, 48])
         self.set_servo_angle([43.6, -26.6, -31.6, -0.6, 58.0, 90.2])
         self.set_servo_angle([2.5, -79.7, 3.0, -0.1, 76.2, 48.9])
+
+    def capture_a_frame(self, cap=None):
+        """Capture a frame from the cam and return the image matrix."""
+        # Capture image from Webcam
+        if cap is None:
+            cap = cv2.VideoCapture(0)
+        if not cap.isOpened():
+            pprint("Unable to open camera")
+
+        # Capture one frame
+        ret, mat_img = cap.read()
+        if not ret:
+            pprint("Unable to capture image")
+
+        return mat_img
+
+    def extract_canny_edge(self, mat_img):
+        """Extract the Canny edge from a image matrix and save it to a gcode file."""
+        # Process image
+        resized = cv2.resize(
+            mat_img, None, fx=0.3, fy=0.3, interpolation=cv2.INTER_AREA
+        )
+        gray_cropped = cv2.cvtColor(resized, cv2.COLOR_BGR2GRAY)  # Convert to grayscale
+        blur = cv2.GaussianBlur(gray_cropped, (5, 5), 0)  # Apply Gaussian smoothing
+        edges = cv2.Canny(blur, 50, 0)  # Apply the Canny edge detector
+
+        # Find the contours in the image
+        contours, hierarchy = cv2.findContours(
+            edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE
+        )
+
+        # Convert contours into G-code
+        gcode_lines = []
+        for contour in contours:
+            # Move to the starting point of the contour
+            x, y = contour[0][0]
+            gcode_lines.append(f"G1 Z245")
+
+            # Move along the contour and generate cutting commands
+            for point in contour[1:]:
+                x, y = point[0]
+                gcode_lines.append(
+                    f"G1 X{x+100} Y{y+60} Z237 F100"
+                )  # Cutting command with depth of cut and feed rate
+
+        # Save the G-code to file
+        with open(self.PAINT_GCODE_FILEPATH, "w") as f:
+            f.write("\n".join(gcode_lines))
+
+    def paint_gcode(self):
+        """Paint the G-code on the whiteboard."""
+        if not self.params["quit"]:
+            self.arm.set_world_offset([0, 0, 0, 0, 0, 0])
+            self.arm.set_state(0)
+            time.sleep(0.5)
+
+        self.reset_location_and_gripper()
+        self.grab_pen()
+
+        # Top-Left coordinate(0,0) to (2,8) reference point
+        if not self.params["quit"]:
+            # Modify the coordinate you want:
+            self.params["variables"]["Center_x"] = 1
+            self.params["variables"]["Center_y"] = 4
+            self.params["variables"]["Offset_x"] = (
+                self.params["variables"].get("Center_x", 0) * -40
+            )
+            self.params["variables"]["Offset_y"] = (
+                self.params["variables"].get("Center_y", 0) * -25
+            )
+            self.arm.set_world_offset(
+                [
+                    self.params["variables"].get("Offset_x", 0),
+                    self.params["variables"].get("Offset_y", 0),
+                    0,
+                    0,
+                    0,
+                    0,
+                ]
+            )  # x(-40) y(-20) z
+            self.arm.set_state(0)
+            time.sleep(0.5)
+
+        # Move to above the whiteboard and ready to draw
+        self.set_position([180.0, -105.0, 270.3, -178.8, -1.1, -43.6])
+        self.set_position([180.0, -105.0, 237.0, -178.8, -1.1, -43.6])
+
+        # Run gcode file
+        if not self.params["quit"]:
+            self.arm.run_gcode_file(path=self.PAINT_GCODE_FILEPATH, speed=1000)
 
     ##################################
     ### Integrated Movement Functions
@@ -292,11 +390,11 @@ class XArmCtrler(object):
         self.put_back_eraser()
         self.reset_location_and_gripper()
 
-    def paint(self):
+    def paint(self, cap=None):
         pprint("Painting...")
-        paint_photo.screen_capture()
-        paint_photo.canny_edge()
-        paint_photo.draw_gcode()
+        frame = self.capture_a_frame(cap)
+        self.extract_canny_edge(frame)
+        self.paint_gcode()
 
     def write(self, text: str):
         pprint("Writing [{}]...".format(text))
@@ -336,7 +434,8 @@ class XArmCtrler(object):
                     return
                 folder_name = "Letters" if character.isupper() else "sletter"
                 file_name = r".\assets\gcode\{}\{}.nc".format(folder_name, character)
-                self.arm.run_gcode_file(path=file_name)
+                if not self.params["quit"]:
+                    self.arm.run_gcode_file(path=file_name)
                 time.sleep(5)
 
             pprint("Writing...")
@@ -345,14 +444,9 @@ class XArmCtrler(object):
 
             for one_line in lines:  # write each line
                 for character in one_line:  # write each character
-                    if not self.params["quit"]:
-                        update_arm_position()  # move arm to next letter's position
-                        write_with_gcode(
-                            character
-                        )  # write out the letter using gcode file
-                        self.params["variables"][
-                            "Center_y"
-                        ] += 1  # go to next pos in line
+                    update_arm_position()  # move arm to next letter's position
+                    write_with_gcode(character)  # write out the letter using gcode file
+                    self.params["variables"]["Center_y"] += 1  # go to next pos in line
                 # go to next line and move arm to the first pos
                 if not self.params["quit"]:
                     if (

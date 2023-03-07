@@ -13,6 +13,7 @@ from PyQt5.QtWidgets import (
     QWidget,
     QComboBox,
     QLineEdit,
+    QSizePolicy,
 )
 
 from xarm_controller import XArmCtrler, pprint
@@ -23,37 +24,108 @@ Documentation can be found [here](https://doc.qt.io/qtforpython/index.html)
 """
 
 
+"""
+Reference: 
+- https://www.qtcentre.org/threads/67614-QThread-does-not-work-as-it-is-supposed-to-do
+- https://realpython.com/python-pyqt-qthread/
+- https://stackoverflow.com/questions/6783194/background-thread-with-qthread-in-pyqt
+"""
+
+
+class InitThread(QThread):
+    arm_ctrl_created = pyqtSignal()
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+    def run(self):
+        self.arm_ctrl = XArmCtrler()
+        self.arm_ctrl_created.emit()
+
+    @property
+    def get_arm_ctrl(self):
+        return self.arm_ctrl
+
+
+class PaintThread(QThread):
+    video_captured = pyqtSignal()
+
+    def __init__(self, arm_ctrl: XArmCtrler, video_capture, parent=None):
+        super().__init__(parent)
+        self.arm_ctrl = arm_ctrl
+        self.video_capture = video_capture
+
+    def run(self):
+        self.arm_ctrl.paint(self.video_capture)
+        self.finished.emit()
+
+
+class EraseThread(QThread):
+    finished = pyqtSignal()
+
+    def __init__(self, arm_ctrl: XArmCtrler, parent=None):
+        super().__init__(parent)
+        self.arm_ctrl = arm_ctrl
+
+    def run(self):
+        self.arm_ctrl.erase()
+        self.finished.emit()
+
+
+class WriteThread(QThread):
+    finished = pyqtSignal()
+
+    def __init__(self, arm_ctrl: XArmCtrler, text: str, parent=None):
+        super().__init__(parent)
+        self.text = text
+        self.arm_ctrl = arm_ctrl
+
+    def run(self):
+        self.arm_ctrl.write(self.text)
+        self.finished.emit()
+
+
+class ResetThread(QThread):
+    finished = pyqtSignal()
+
+    def __init__(self, arm_ctrl: XArmCtrler, parent=None):
+        super().__init__(parent)
+        self.arm_ctrl = arm_ctrl
+
+    def run(self):
+        self.arm_ctrl.reset_location_and_gripper()
+        self.finished.emit()
+
+
+class QuitThread(QThread):
+    finished = pyqtSignal()
+
+    def __init__(self, arm_ctrl: XArmCtrler, parent=None):
+        super().__init__(parent)
+        self.arm_ctrl = arm_ctrl
+
+    def run(self):
+        self.arm_ctrl.quit()
+        self.finished.emit()
+
+
 class VideoStreamer(QMainWindow):
-    class ArmWorker(QObject):
-        # tutorial: https://realpython.com/python-pyqt-qthread/
-        finished = pyqtSignal()
-
-        def init_arm(self):
-            self.arm_ctrl = XArmCtrler()
-            self.finished.emit()
-
-        def paint(self):
-            XArmCtrler().paint()
-            self.finished.emit()
-
-        def erase(self):
-            XArmCtrler().erase()
-            self.finished.emit()
-
-        def write(self, content: str = None):
-            content = content or "NA"  # default content if content is None
-            XArmCtrler().write(content)
-            self.finished.emit()
-
-        def reset_location_and_gripper(self):
-            XArmCtrler().reset_location_and_gripper()
-            self.finished.emit()
-
-        def quit(self):
-            XArmCtrler().quit()
-            self.finished.emit()
-
     DEFAULT_VIDEO_SOURCE = 0
+
+    CONNECT_BTN_TEXT_NORMAL = "Connect xArm"
+    CONNECT_BTN_TEXT_CONNECTING = "Connecting..."
+    DISCONNECT_BTN_TEXT_NORMAL = "Disconnect xArm"
+    DISCONNECT_BTN_TEXT_DISCONNECTING = "Disconnecting..."
+    PAINT_BTN_TEXT_NORMAL = "Paint me!"
+    PAINT_BTN_TEXT_PAINTING = "Painting..."
+    WRITE_BTN_TEXT_NORMAL = "Write: "
+    WRITE_BTN_TEXT_WRITING = "Writing..."
+    ERASE_BTN_TEXT_NORMAL = "Erase"
+    ERASE_BTN_TEXT_ERASING = "Erasing..."
+    RESET_BTN_TEXT_NORMAL = "Reset"
+    RESET_BTN_TEXT_RESETTING = "Resetting..."
+    FORCE_STOP_BTN_TEXT_NORMAL = "Force Stop and Quit"
+    FORCE_STOP_BTN_TEXT_QUITTING = "Quitting..."
 
     def __init__(self):
         super().__init__()
@@ -63,7 +135,7 @@ class VideoStreamer(QMainWindow):
 
     def setupUI(self):
         self.setWindowTitle("xArm")
-        self.setGeometry(100, 100, 640, 480)
+        self.setGeometry(100, 100, 840, 480)
 
         ####################
         ### Create Widgets
@@ -71,17 +143,20 @@ class VideoStreamer(QMainWindow):
 
         self.timer = QTimer(self)  # add background timer
         self.video_label = QLabel(self)  # display the video stream
+        self.video_source_label = QLabel(
+            "Video Source:", self
+        )  # label for video source
         self.source_combobox = QComboBox(self)  # choose the video source
         self.write_content_input = QLineEdit(self)  # content for xArm to write
 
         # Buttons
-        self.connect_arm_btn = QPushButton("Connect xArm", self)
-        self.disconnect_arm_btn = QPushButton("Disconnect xArm", self)
-        self.paint_btn = QPushButton("Paint", self)
-        self.write_btn = QPushButton("Write", self)
-        self.erase_btn = QPushButton("Erase", self)
-        self.reset_btn = QPushButton("Reset", self)  # reset arm location and gripper
-        self.force_stop_btn = QPushButton("Force Stop and Quit", self)
+        self.connect_arm_btn = QPushButton(self.CONNECT_BTN_TEXT_NORMAL, self)
+        self.disconnect_arm_btn = QPushButton(self.DISCONNECT_BTN_TEXT_NORMAL, self)
+        self.paint_btn = QPushButton(self.PAINT_BTN_TEXT_NORMAL, self)
+        self.write_btn = QPushButton(self.WRITE_BTN_TEXT_NORMAL, self)
+        self.erase_btn = QPushButton(self.ERASE_BTN_TEXT_NORMAL, self)
+        self.reset_btn = QPushButton(self.RESET_BTN_TEXT_NORMAL, self)
+        self.force_stop_btn = QPushButton(self.FORCE_STOP_BTN_TEXT_NORMAL, self)
 
         #######################
         ### Congigure Widgets
@@ -89,6 +164,8 @@ class VideoStreamer(QMainWindow):
 
         self.timer.timeout.connect(self.update_frame)  # keep updating frames
         self.video_label.setAlignment(Qt.AlignCenter)  # center label's content
+        self.write_btn.setFixedWidth(60)
+        self.video_source_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         # Set force stop button color and font
         font = QFont()
@@ -127,24 +204,33 @@ class VideoStreamer(QMainWindow):
         ### Create and Congigure Layouts
         #################################
 
-        # Vertical layout for the arm connetion
+        # VBox for video source
+        self.video_source_layout = QVBoxLayout()
+        self.video_source_layout.addWidget(self.video_source_label)
+        self.video_source_layout.addWidget(self.source_combobox)
+
+        # Vertical layout for the arm connetion/disconnection
         self.arm_connection_layout = QVBoxLayout()
         self.arm_connection_layout.addWidget(self.connect_arm_btn)
         self.arm_connection_layout.addWidget(self.disconnect_arm_btn)
 
         # Vertical layout for write function
-        self.write_layout = QVBoxLayout()
+        self.write_layout = QHBoxLayout()
         self.write_layout.addWidget(self.write_btn)
         self.write_layout.addWidget(self.write_content_input)
 
+        # Vbox for arm function widgets
+        self.arm_function_layout = QVBoxLayout()
+        self.arm_function_layout.addWidget(self.paint_btn)
+        self.arm_function_layout.addLayout(self.write_layout)
+        self.arm_function_layout.addWidget(self.erase_btn)
+        self.arm_function_layout.addWidget(self.reset_btn)
+
         # Vertical layout for side menu
         self.side_menu = QVBoxLayout()
-        self.side_menu.addWidget(self.source_combobox)
+        self.side_menu.addLayout(self.video_source_layout)
         self.side_menu.addLayout(self.arm_connection_layout)
-        self.side_menu.addWidget(self.paint_btn)
-        self.side_menu.addLayout(self.write_layout)
-        self.side_menu.addWidget(self.erase_btn)
-        self.side_menu.addWidget(self.reset_btn)
+        self.side_menu.addLayout(self.arm_function_layout)
         self.side_menu.addWidget(self.force_stop_btn)
 
         # Horizontal layout for the main window
@@ -157,94 +243,105 @@ class VideoStreamer(QMainWindow):
         self.central_widget.setLayout(self.main_layout)
         self.setCentralWidget(self.central_widget)
 
-    def arm_worker_start(
-        self, worker: QObject, task_func, btn: QPushButton = None, cleanup_cb=None
-    ):
-        self.work_thread = QThread()  # create QThread
-        worker.moveToThread(self.work_thread)  # move QObject to thread
-        self.work_thread.started.connect(task_func)  # do task when QThread starts
-        worker.finished.connect(self.work_thread.quit)  # quit QThread when task is done
-        worker.finished.connect(worker.deleteLater)  # delete QObject when task is done
-        self.work_thread.finished.connect(
-            self.work_thread.deleteLater
-        )  # delete QThread when task is done
-        self.work_thread.start()  # start QThread
-
-        if cleanup_cb is not None:  # add my own cleanup callback when task is done
-            self.work_thread.finished.connect(cleanup_cb)
-
-        # First disable the button, then enable it after task is done
-        if btn is not None:
-            btn.setEnabled(False)
-            self.work_thread.finished.connect(lambda: btn.setEnabled(True))
+    def enable_function_widgets(self, state: bool):
+        self.paint_btn.setEnabled(state)
+        self.write_btn.setEnabled(state)
+        self.write_content_input.setEnabled(state)
+        self.erase_btn.setEnabled(state)
+        self.reset_btn.setEnabled(state)
+        self.disconnect_arm_btn.setEnabled(state)
 
     def init_arm(self):
-        def core():
-            self.worker.init_arm()
-            # Disable connect button
-            self.connect_arm_btn.setEnabled(False)
+        def cleanup():
+            self.connect_arm_btn.setText(self.CONNECT_BTN_TEXT_NORMAL)
             # Enable xArm controlling widgets
-            self.paint_btn.setEnabled(True)
-            self.write_btn.setEnabled(True)
-            self.write_content_input.setEnabled(True)
-            self.erase_btn.setEnabled(True)
-            self.reset_btn.setEnabled(True)
-            self.disconnect_arm_btn.setEnabled(True)
+            self.enable_function_widgets(True)
             self.force_stop_btn.setEnabled(True)
 
-        # worker = self.ArmWorker()
-        # worker.init_arm()
-        self.worker = self.ArmWorker()
-        self.arm_worker_start(self.worker, core)
+        def set_arm_ctrl():
+            self.arm_ctrl = self.initThread.arm_ctrl
+
+        self.connect_arm_btn.setEnabled(False)
+        self.connect_arm_btn.setText(self.CONNECT_BTN_TEXT_CONNECTING)
+
+        self.initThread = InitThread()
+        self.initThread.arm_ctrl_created.connect(set_arm_ctrl)
+        self.initThread.arm_ctrl_created.connect(cleanup)
+        self.initThread.start()
 
         pprint("xArm connected")
 
     def arm_paint(self):
-        # Release video stream
-        pprint("Stop video stream")
-        self.timer.stop()
-        self.video.release()
+        def cleanup():
+            self.enable_function_widgets(True)
+            self.paint_btn.setText(self.PAINT_BTN_TEXT_NORMAL)
 
-        self.worker = self.ArmWorker()
-        self.arm_worker_start(
-            self.worker, self.worker.paint, self.paint_btn, cleanup_cb=self.start_video
-        )  # restart video stream after task is done using cleanup_cb parameter
+        self.enable_function_widgets(False)
+        self.paint_btn.setText(self.PAINT_BTN_TEXT_PAINTING)
+
+        self.paintThread = PaintThread(self.arm_ctrl, self.video)
+        self.paintThread.finished.connect(cleanup)
+        self.paintThread.start()
 
     def arm_erase(self):
-        self.worker = self.ArmWorker()
-        self.arm_worker_start(self.worker, self.worker.erase, self.erase_btn)
+        def cleanup():
+            self.enable_function_widgets(True)
+            self.erase_btn.setText(self.ERASE_BTN_TEXT_NORMAL)
+
+        self.enable_function_widgets(False)
+        self.erase_btn.setText(self.ERASE_BTN_TEXT_ERASING)
+
+        self.eraseThread = EraseThread(self.arm_ctrl)
+        self.eraseThread.finished.connect(cleanup)
+        self.eraseThread.start()
 
     def arm_write(self, text: str):
-        self.worker = self.ArmWorker()
-        self.arm_worker_start(
-            self.worker, lambda: self.worker.write(text), self.write_btn
-        )
-        # self.arm_worker_start(self.worker, self.worker.write, self.write_btn)
+        def cleanup():
+            self.enable_function_widgets(True)
+            self.write_btn.setText(self.WRITE_BTN_TEXT_NORMAL)
+
+        self.enable_function_widgets(False)
+        self.write_btn.setText(self.WRITE_BTN_TEXT_WRITING)
+
+        self.writeThread = WriteThread(self.arm_ctrl, text)
+        self.writeThread.finished.connect(cleanup)
+        self.writeThread.start()
 
     def arm_reset_location_and_gripper(self):
-        self.worker = self.ArmWorker()
-        self.arm_worker_start(
-            self.worker, self.worker.reset_location_and_gripper, self.reset_btn
-        )
+        def cleanup():
+            self.enable_function_widgets(True)
+            self.reset_btn.setText(self.RESET_BTN_TEXT_NORMAL)
+
+        self.enable_function_widgets(False)
+        self.reset_btn.setText(self.RESET_BTN_TEXT_RESETTING)
+
+        self.resetThread = ResetThread(self.arm_ctrl)
+        self.resetThread.finished.connect(cleanup)
+        self.resetThread.start()
 
     def disconnet_arm(self):
-        self.worker = self.ArmWorker()
-        self.arm_worker_start(self.worker, self.worker.quit)
-        pprint("xArm disconnected")
+        def switch_btn_state():
+            # Disable xArm controlling widgets
+            self.enable_function_widgets(False)
+            self.force_stop_btn.setEnabled(False)
 
-        # Enable connect button
-        self.connect_arm_btn.setEnabled(True)
-        # Disable xArm controlling widgets
-        self.paint_btn.setEnabled(False)
-        self.write_btn.setEnabled(False)
-        self.write_content_input.setEnabled(False)
-        self.erase_btn.setEnabled(False)
-        self.reset_btn.setEnabled(False)
-        self.disconnect_arm_btn.setEnabled(False)
-        self.force_stop_btn.setEnabled(False)
+        def cleanup():
+            # Restore disconnect button text and enable connect button
+            self.disconnect_arm_btn.setText(self.DISCONNECT_BTN_TEXT_NORMAL)
+            self.connect_arm_btn.setEnabled(True)
+
+        switch_btn_state()  # immediately disable all buttons but connect button
+        self.disconnect_arm_btn.setText(self.DISCONNECT_BTN_TEXT_DISCONNECTING)
+
+        quitThread = QuitThread(self.arm_ctrl)
+        quitThread.finished.connect(cleanup)
+        quitThread.start()
+
+        pprint("xArm disconnected")
 
     def force_stop_arm(self):
         pprint("Force stopping xArm...")
+        self.force_stop_btn.setText(self.FORCE_STOP_BTN_TEXT_QUITTING)
         XArmCtrler().emergency_stop()
         QApplication.quit()
 

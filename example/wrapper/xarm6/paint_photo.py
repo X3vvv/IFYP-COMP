@@ -100,6 +100,10 @@ def draw_gcode():
         from xarm.tools import utils
     except:
         pass
+
+    import os, sys
+
+    sys.path.append(os.path.join(os.path.dirname(__file__), "../../.."))
     from xarm import version
     from xarm.wrapper import XArmAPI
 
@@ -303,6 +307,7 @@ def draw_gcode():
             )  # x(-40) y(-20) z
             arm.set_state(0)
             time.sleep(0.5)
+        # Move to above the whiteboard and ready to draw
         if arm.error_code == 0 and not params["quit"]:
             code = arm.set_position(
                 *[180.0, -105.0, 270.3, -178.8, -1.1, -43.6],
@@ -330,3 +335,8 @@ def draw_gcode():
         if not params["quit"]:
             # here
             arm.run_gcode_file(path="assets/gcode/others/output.nc", speed=1000)
+
+
+screen_capture()
+canny_edge()
+draw_gcode()
