@@ -4,23 +4,9 @@ import SpeechToText
 import pyttsx3
 import openai
 import random
-from xarm_controller import XArmCtrler
+from xarm_controller import XArmCtrler, pprint
 
 openai.api_key_path = r"D:\OneDrive - The Hong Kong Polytechnic University\Interests\cloud_Codes\Python\openai_api_key"
-
-
-def pprint(*args, **kwargs):
-    try:
-        stack_tuple = traceback.extract_stack(limit=2)[0]
-        print(
-            "[{}][{}] {}".format(
-                time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())),
-                stack_tuple[1],
-                " ".join(map(str, args)),
-            )
-        )
-    except:
-        print(*args, **kwargs)
 
 
 def get_command(user_input: str):

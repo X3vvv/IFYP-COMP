@@ -280,7 +280,6 @@ class XArmCtrler(object):
         self.set_gripper_position(300)
         self.set_tcp_load(0.82, [0, 0, 48])
         self.set_servo_angle([43.6, -26.6, -31.6, -0.6, 58.0, 90.2])
-        self.set_gripper_position(0)
         self.set_servo_angle([2.5, -79.7, 3.0, -0.1, 76.2, 48.9])
 
     ##################################

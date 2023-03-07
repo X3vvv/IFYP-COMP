@@ -1,7 +1,7 @@
+from threading import Thread
 import cv2
 import sys
-from threading import Thread
-from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QThread
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtWidgets import (
     QApplication,
@@ -24,106 +24,183 @@ Documentation can be found [here](https://doc.qt.io/qtforpython/index.html)
 
 
 class VideoStreamer(QMainWindow):
+    class ArmWorker(QThread):
+        finished = pyqtSignal()
+
+        def init_arm(self):
+            self.arm_ctrl = XArmCtrler()
+            self.finished.emit()
+
+        def paint(self):
+            self.arm_ctrl.paint()
+            self.finished.emit()
+
+        def erase(self):
+            self.arm_ctrl.erase()
+            self.finished.emit()
+
+        def write(self, content: str):
+            self.arm_ctrl.write(content)
+            self.finished.emit()
+
+        def reset_location_and_gripper(self):
+            self.arm_ctrl.reset_location_and_gripper()
+            self.finished.emit()
+
+        def quit(self):
+            self.arm_ctrl.quit()
+            self.finished.emit()
+
     DEFAULT_VIDEO_SOURCE = 0
 
     def __init__(self):
         super().__init__()
-        self.arm = None
+        self.arm_worker = self.ArmWorker()
+        self.video = None
+        self.available_sources = []
+        self.setupUI()
 
+    def setupUI(self):
         self.setWindowTitle("xArm")
         self.setGeometry(100, 100, 640, 480)
 
-        # Create a label to display the video stream
-        self.video_label = QLabel(self)
-        self.video_label.setAlignment(Qt.AlignCenter)
+        ####################
+        ### Create Widgets
+        ####################
 
-        # Create a dropdown list to choose the video source
-        self.source_combobox = QComboBox(self)
-        self.source_combobox.activated.connect(self.change_video_source)
+        self.timer = QTimer(self)  # add background timer
+        self.video_label = QLabel(self)  # display the video stream
+        self.source_combobox = QComboBox(self)  # choose the video source
+        self.write_content_input = QLineEdit(self)  # content for xArm to write
 
-        # Create buttons
+        # Buttons
         self.connect_arm_btn = QPushButton("Connect xArm", self)
+        self.disconnect_arm_btn = QPushButton("Disconnect xArm", self)
         self.paint_btn = QPushButton("Paint", self)
         self.write_btn = QPushButton("Write", self)
         self.erase_btn = QPushButton("Erase", self)
-        self.reset_btn = QPushButton("Reset", self)
-        self.quit_btn = QPushButton("Quit", self)
+        self.reset_btn = QPushButton("Reset", self)  # reset arm location and gripper
+        self.force_stop_btn = QPushButton("Force Stop", self)
 
-        # Create write content input box
-        self.write_content_input = QLineEdit(self)
+        #######################
+        ### Congigure Widgets
+        #######################
 
-        # Add button callbacks
+        self.timer.timeout.connect(self.update_frame)  # keep updating frames
+        self.video_label.setAlignment(Qt.AlignCenter)  # center label's content
+        pass  # Change self.force_stop_btn color here
+
+        # Button callbacks
         self.connect_arm_btn.clicked.connect(self.init_arm)
-        self.quit_btn.clicked.connect(self.disconnet_arm)
+        self.disconnect_arm_btn.clicked.connect(self.disconnet_arm)
+        self.paint_btn.clicked.connect(self.arm_paint)
+        self.write_btn.clicked.connect(
+            lambda: self.arm_write(self.write_content_input.text())
+        )
+        self.erase_btn.clicked.connect(self.arm_erase)
+        self.reset_btn.clicked.connect(self.arm_reset_location_and_gripper)
+        self.force_stop_btn.clicked.connect(self.force_stop_arm)
 
-        # Set widgets disabled before xArm is connected
+        # Disable widgets before xArm is connected
         self.paint_btn.setDisabled(True)
         self.write_btn.setDisabled(True)
         self.write_content_input.setDisabled(True)
         self.erase_btn.setDisabled(True)
-        self.quit_btn.setDisabled(True)
+        self.disconnect_arm_btn.setDisabled(True)
 
-        # Create a vertical layout for the buttons
-        self.sidebar = QVBoxLayout()
-        self.sidebar.addWidget(self.source_combobox)
-        self.sidebar.addWidget(self.connect_arm_btn)
-        self.sidebar.addWidget(self.paint_btn)
-        self.sidebar.addWidget(self.write_btn)
-        self.sidebar.addWidget(self.write_content_input)
-        self.sidebar.addWidget(self.erase_btn)
-        self.sidebar.addWidget(self.reset_btn)
-        self.sidebar.addWidget(self.quit_btn)
+        # Set dropdown list callback and populate with video sources
+        self.source_combobox.activated.connect(self.change_video_source)
+        self.update_available_video_sources()
+        for source in self.available_sources:
+            self.source_combobox.addItem(source["name"])
 
-        # Create a horizontal layout for the label and buttons
+        #################################
+        ### Create and Congigure Layouts
+        #################################
+
+        # Vertical layout for the arm connetion
+        self.arm_connection_layout = QVBoxLayout()
+        self.arm_connection_layout.addWidget(self.connect_arm_btn)
+        self.arm_connection_layout.addWidget(self.disconnect_arm_btn)
+
+        # Vertical layout for write function
+        self.write_layout = QVBoxLayout()
+        self.write_layout.addWidget(self.write_btn)
+        self.write_layout.addWidget(self.write_content_input)
+
+        # Vertical layout for side menu
+        self.side_menu = QVBoxLayout()
+        self.side_menu.addWidget(self.source_combobox)
+        self.side_menu.addLayout(self.arm_connection_layout)
+        self.side_menu.addWidget(self.paint_btn)
+        self.side_menu.addLayout(self.write_layout)
+        self.side_menu.addWidget(self.erase_btn)
+        self.side_menu.addWidget(self.reset_btn)
+        self.side_menu.addWidget(self.force_stop_btn)
+
+        # Horizontal layout for the main window
         self.main_layout = QHBoxLayout()
         self.main_layout.addWidget(self.video_label)
-        self.main_layout.addLayout(self.sidebar)
+        self.main_layout.addLayout(self.side_menu)
 
         # Set the layout as the central widget
         self.central_widget = QWidget(self)
         self.central_widget.setLayout(self.main_layout)
         self.setCentralWidget(self.central_widget)
 
-        # Initialize variables
-        self.video = None
-        self.timer = QTimer(self)
-
-        # Add update frame into timer callback
-        self.timer.timeout.connect(self.update_frame)
-
-        # Populate the video source dropdown list
-        self.update_available_video_sources()
-        for source in self.available_sources:
-            self.source_combobox.addItem(source["name"])
-
     def init_arm(self):
-        self.arm = XArmCtrler()
+        self.arm_worker.init_arm()
         pprint("xArm connected")
+
+        # Disable connect button
+        self.connect_arm_btn.setDisabled(True)
+        # Enable xArm controlling widgets
         self.paint_btn.setDisabled(False)
         self.write_btn.setDisabled(False)
         self.write_content_input.setDisabled(False)
         self.erase_btn.setDisabled(False)
         self.reset_btn.setDisabled(False)
-        self.quit_btn.setDisabled(False)
+        self.disconnect_arm_btn.setDisabled(False)
 
-        # Add button callbacks
-        self.paint_btn.clicked.connect(self.arm.paint)
-        self.write_btn.clicked.connect(
-            lambda: self.arm.write(self.write_content_input.text())
-        )
-        self.erase_btn.clicked.connect(self.arm.erase)
-        self.quit_btn.clicked.connect(self.arm.quit)
-        self.reset_btn.clicked.connect(self.arm.reset_location_and_gripper)
+    def arm_paint(self):
+        def task_done():
+            self.paint_btn.setDisabled(False)
+
+        self.paint_btn.setDisabled(True)
+        self.arm_worker.finished.connect(self.arm_worker.paint)
+        self.arm_worker.finished.connect(task_done)
+        self.arm_worker.start()
+
+    def arm_write(self, text: str):
+        self.arm_worker.finished.connect(lambda: self.arm_worker.write(text))
+        self.arm_worker.start()
+
+    def arm_erase(self):
+        self.arm_worker.finished.connect(self.arm_worker.erase)
+        self.arm_worker.start()
+
+    def arm_reset_location_and_gripper(self):
+        self.arm_worker.finished.connect(self.arm_worker.reset_location_and_gripper)
+        self.arm_worker.start()
 
     def disconnet_arm(self):
-        self.arm.quit()
+        self.arm_worker.finished.connect(self.arm_worker.quit)
         pprint("xArm disconnected")
+
+        # Enable connect button
+        self.connect_arm_btn.setDisabled(False)
+        # Disable xArm controlling widgets
         self.paint_btn.setDisabled(True)
         self.write_btn.setDisabled(True)
         self.write_content_input.setDisabled(True)
         self.erase_btn.setDisabled(True)
         self.reset_btn.setDisabled(True)
-        self.quit_btn.setDisabled(True)
+        self.disconnect_arm_btn.setDisabled(True)
+
+    def force_stop_arm(self):
+        pprint("Force stopping xArm...")
+        self.arm_worker.terminate()
+        self.arm_worker.wait()
 
     def start_video(self):
         # Open the virtual camera using OpenCV
@@ -152,12 +229,6 @@ class VideoStreamer(QMainWindow):
 
         # Display the QImage on the label
         self.video_label.setPixmap(QPixmap.fromImage(image))
-
-    def stop_video(self):
-        # Stop the video timer and release the virtual camera
-        self.timer.stop()
-        if self.video:
-            self.video.release()
 
     class VideoCaptureThread(Thread):
         def __init__(self, index):
@@ -199,8 +270,10 @@ class VideoStreamer(QMainWindow):
             print("No video stream source is available")
 
     def change_video_source(self):
-        # Stop the current video and release the virtual camera
-        self.stop_video()
+        # Stop the current video and release camera
+        self.timer.stop()
+        if self.video:
+            self.video.release()
 
         # Get the index of the selected video source from the dropdown list
         index = self.source_combobox.currentIndex()
@@ -223,4 +296,4 @@ if __name__ == "__main__":
     player = VideoStreamer()
     player.start_video()
     player.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
