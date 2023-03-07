@@ -1,8 +1,8 @@
 from threading import Thread
 import cv2
 import sys
-from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QThread
-from PyQt5.QtGui import QImage, QPixmap
+from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QObject, QThread
+from PyQt5.QtGui import QImage, QPixmap, QColor, QFont
 from PyQt5.QtWidgets import (
     QApplication,
     QMainWindow,
@@ -24,7 +24,8 @@ Documentation can be found [here](https://doc.qt.io/qtforpython/index.html)
 
 
 class VideoStreamer(QMainWindow):
-    class ArmWorker(QThread):
+    class ArmWorker(QObject):
+        # tutorial: https://realpython.com/python-pyqt-qthread/
         finished = pyqtSignal()
 
         def init_arm(self):
@@ -32,30 +33,29 @@ class VideoStreamer(QMainWindow):
             self.finished.emit()
 
         def paint(self):
-            self.arm_ctrl.paint()
+            XArmCtrler().paint()
             self.finished.emit()
 
         def erase(self):
-            self.arm_ctrl.erase()
+            XArmCtrler().erase()
             self.finished.emit()
 
         def write(self, content: str):
-            self.arm_ctrl.write(content)
+            XArmCtrler().write(content)
             self.finished.emit()
 
         def reset_location_and_gripper(self):
-            self.arm_ctrl.reset_location_and_gripper()
+            XArmCtrler().reset_location_and_gripper()
             self.finished.emit()
 
         def quit(self):
-            self.arm_ctrl.quit()
+            XArmCtrler().quit()
             self.finished.emit()
 
     DEFAULT_VIDEO_SOURCE = 0
 
     def __init__(self):
         super().__init__()
-        self.arm_worker = self.ArmWorker()
         self.video = None
         self.available_sources = []
         self.setupUI()
@@ -80,7 +80,7 @@ class VideoStreamer(QMainWindow):
         self.write_btn = QPushButton("Write", self)
         self.erase_btn = QPushButton("Erase", self)
         self.reset_btn = QPushButton("Reset", self)  # reset arm location and gripper
-        self.force_stop_btn = QPushButton("Force Stop", self)
+        self.force_stop_btn = QPushButton("Force Stop and Quit", self)
 
         #######################
         ### Congigure Widgets
@@ -88,7 +88,13 @@ class VideoStreamer(QMainWindow):
 
         self.timer.timeout.connect(self.update_frame)  # keep updating frames
         self.video_label.setAlignment(Qt.AlignCenter)  # center label's content
-        pass  # Change self.force_stop_btn color here
+
+        # Set force stop button color and font
+        font = QFont()
+        font.setBold(True)
+        self.force_stop_btn.setFont(font)
+        color = QColor(255, 0, 0)
+        self.force_stop_btn.setStyleSheet(f"color: {color.name()};")
 
         # Button callbacks
         self.connect_arm_btn.clicked.connect(self.init_arm)
@@ -102,11 +108,13 @@ class VideoStreamer(QMainWindow):
         self.force_stop_btn.clicked.connect(self.force_stop_arm)
 
         # Disable widgets before xArm is connected
-        self.paint_btn.setDisabled(True)
-        self.write_btn.setDisabled(True)
-        self.write_content_input.setDisabled(True)
-        self.erase_btn.setDisabled(True)
-        self.disconnect_arm_btn.setDisabled(True)
+        self.paint_btn.setEnabled(False)
+        self.write_btn.setEnabled(False)
+        self.write_content_input.setEnabled(False)
+        self.erase_btn.setEnabled(False)
+        self.disconnect_arm_btn.setEnabled(False)
+        self.reset_btn.setEnabled(False)
+        self.force_stop_btn.setEnabled(False)
 
         # Set dropdown list callback and populate with video sources
         self.source_combobox.activated.connect(self.change_video_source)
@@ -148,59 +156,79 @@ class VideoStreamer(QMainWindow):
         self.central_widget.setLayout(self.main_layout)
         self.setCentralWidget(self.central_widget)
 
+    def arm_worker_start(self, worker, task_func, btn: QPushButton = None):
+        self.work_thread = QThread()
+        worker.moveToThread(self.work_thread)
+        self.work_thread.started.connect(task_func)
+        worker.finished.connect(self.work_thread.quit)
+        worker.finished.connect(worker.deleteLater)
+        self.work_thread.finished.connect(self.work_thread.deleteLater)
+        self.work_thread.start()
+
+        if btn is not None:
+            btn.setEnabled(False)
+            self.work_thread.finished.connect(lambda: btn.setEnabled(True))
+
     def init_arm(self):
-        self.arm_worker.init_arm()
+        def core():
+            self.worker.init_arm()
+            # Disable connect button
+            self.connect_arm_btn.setEnabled(False)
+            # Enable xArm controlling widgets
+            self.paint_btn.setEnabled(True)
+            self.write_btn.setEnabled(True)
+            self.write_content_input.setEnabled(True)
+            self.erase_btn.setEnabled(True)
+            self.reset_btn.setEnabled(True)
+            self.disconnect_arm_btn.setEnabled(True)
+            self.force_stop_btn.setEnabled(True)
+
+        # worker = self.ArmWorker()
+        # worker.init_arm()
+        self.worker = self.ArmWorker()
+        self.arm_worker_start(self.worker, core)
+
         pprint("xArm connected")
 
-        # Disable connect button
-        self.connect_arm_btn.setDisabled(True)
-        # Enable xArm controlling widgets
-        self.paint_btn.setDisabled(False)
-        self.write_btn.setDisabled(False)
-        self.write_content_input.setDisabled(False)
-        self.erase_btn.setDisabled(False)
-        self.reset_btn.setDisabled(False)
-        self.disconnect_arm_btn.setDisabled(False)
-
     def arm_paint(self):
-        def task_done():
-            self.paint_btn.setDisabled(False)
-
-        self.paint_btn.setDisabled(True)
-        self.arm_worker.finished.connect(self.arm_worker.paint)
-        self.arm_worker.finished.connect(task_done)
-        self.arm_worker.start()
-
-    def arm_write(self, text: str):
-        self.arm_worker.finished.connect(lambda: self.arm_worker.write(text))
-        self.arm_worker.start()
+        worker = self.ArmWorker()
+        self.arm_worker_start(worker, worker.paint, self.paint_btn)
 
     def arm_erase(self):
-        self.arm_worker.finished.connect(self.arm_worker.erase)
-        self.arm_worker.start()
+        self.worker = self.ArmWorker()
+        self.arm_worker_start(self.worker, self.worker.erase, self.erase_btn)
+
+    def arm_write(self, text: str):
+        self.worker = self.ArmWorker()
+        self.arm_worker_start(
+            self.worker, lambda: self.worker.write(text), self.write_btn
+        )
 
     def arm_reset_location_and_gripper(self):
-        self.arm_worker.finished.connect(self.arm_worker.reset_location_and_gripper)
-        self.arm_worker.start()
+        self.worker = self.ArmWorker()
+        self.arm_worker_start(
+            self.worker, self.worker.reset_location_and_gripper, self.reset_btn
+        )
 
     def disconnet_arm(self):
-        self.arm_worker.finished.connect(self.arm_worker.quit)
+        worker = self.ArmWorker()
+        self.arm_worker_start(worker, worker.quit)
         pprint("xArm disconnected")
 
         # Enable connect button
-        self.connect_arm_btn.setDisabled(False)
+        self.connect_arm_btn.setEnabled(True)
         # Disable xArm controlling widgets
-        self.paint_btn.setDisabled(True)
-        self.write_btn.setDisabled(True)
-        self.write_content_input.setDisabled(True)
-        self.erase_btn.setDisabled(True)
-        self.reset_btn.setDisabled(True)
-        self.disconnect_arm_btn.setDisabled(True)
+        self.paint_btn.setEnabled(False)
+        self.write_btn.setEnabled(False)
+        self.write_content_input.setEnabled(False)
+        self.erase_btn.setEnabled(False)
+        self.reset_btn.setEnabled(False)
+        self.disconnect_arm_btn.setEnabled(False)
 
     def force_stop_arm(self):
         pprint("Force stopping xArm...")
-        self.arm_worker.terminate()
-        self.arm_worker.wait()
+        XArmCtrler().emergency_stop()
+        QApplication.quit()
 
     def start_video(self):
         # Open the virtual camera using OpenCV
@@ -290,9 +318,7 @@ class VideoStreamer(QMainWindow):
 
 if __name__ == "__main__":
 
-    app = QApplication(
-        sys.argv
-    )  # Ensure that the QApplication instance is not garbage collected
+    app = QApplication(sys.argv)
     player = VideoStreamer()
     player.start_video()
     player.show()

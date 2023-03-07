@@ -36,6 +36,8 @@ class XArmCtrler(object):
     QUIT = "quit"
     NORMAL_CHAT = "normal chat"
 
+    params = None
+
     def __init__(self, ip: str = "192.168.1.210", *args, **kwargs):
         pprint("Initializing xArm Controller...")
         pprint("xArm-Python-SDK Version:{}".format(version.__version__))
@@ -77,17 +79,12 @@ class XArmCtrler(object):
         # Settings
         if not self.params["quit"]:
             self.params["speed"] = 100
-        if not self.params["quit"]:
             self.params["acc"] = 2000
-        if not self.params["quit"]:
             self.params["variables"]["Center_x"] = 1
-        if not self.params["quit"]:
             self.params["variables"]["Center_y"] = 1
-        if not self.params["quit"]:
             self.params["variables"]["Offset_x"] = (
                 self.params["variables"].get("Center_x", 0) * -40
             )
-        if not self.params["quit"]:
             self.params["variables"]["Offset_y"] = (
                 self.params["variables"].get("Center_y", 0) * -25
             )
@@ -397,6 +394,10 @@ class XArmCtrler(object):
     def quit(self):
         """Clean up the arm configurations."""
         pprint("Quitting...")
-        self.params["quit"] = True
         self.reset_arm()
+        self.params["quit"] = True
         pprint("xArm disconnected")
+
+    def emergency_stop(self):
+        pprint("Emergency stop xArm")
+        self.arm.emergency_stop()
