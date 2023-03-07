@@ -40,7 +40,8 @@ class VideoStreamer(QMainWindow):
             XArmCtrler().erase()
             self.finished.emit()
 
-        def write(self, content: str):
+        def write(self, content: str = None):
+            content = content or "NA"  # default content if content is None
             XArmCtrler().write(content)
             self.finished.emit()
 
@@ -156,15 +157,23 @@ class VideoStreamer(QMainWindow):
         self.central_widget.setLayout(self.main_layout)
         self.setCentralWidget(self.central_widget)
 
-    def arm_worker_start(self, worker, task_func, btn: QPushButton = None):
-        self.work_thread = QThread()
-        worker.moveToThread(self.work_thread)
-        self.work_thread.started.connect(task_func)
-        worker.finished.connect(self.work_thread.quit)
-        worker.finished.connect(worker.deleteLater)
-        self.work_thread.finished.connect(self.work_thread.deleteLater)
-        self.work_thread.start()
+    def arm_worker_start(
+        self, worker: QObject, task_func, btn: QPushButton = None, cleanup_cb=None
+    ):
+        self.work_thread = QThread()  # create QThread
+        worker.moveToThread(self.work_thread)  # move QObject to thread
+        self.work_thread.started.connect(task_func)  # do task when QThread starts
+        worker.finished.connect(self.work_thread.quit)  # quit QThread when task is done
+        worker.finished.connect(worker.deleteLater)  # delete QObject when task is done
+        self.work_thread.finished.connect(
+            self.work_thread.deleteLater
+        )  # delete QThread when task is done
+        self.work_thread.start()  # start QThread
 
+        if cleanup_cb is not None:  # add my own cleanup callback when task is done
+            self.work_thread.finished.connect(cleanup_cb)
+
+        # First disable the button, then enable it after task is done
         if btn is not None:
             btn.setEnabled(False)
             self.work_thread.finished.connect(lambda: btn.setEnabled(True))
@@ -191,8 +200,15 @@ class VideoStreamer(QMainWindow):
         pprint("xArm connected")
 
     def arm_paint(self):
-        worker = self.ArmWorker()
-        self.arm_worker_start(worker, worker.paint, self.paint_btn)
+        # Release video stream
+        pprint("Stop video stream")
+        self.timer.stop()
+        self.video.release()
+
+        self.worker = self.ArmWorker()
+        self.arm_worker_start(
+            self.worker, self.worker.paint, self.paint_btn, cleanup_cb=self.start_video
+        )  # restart video stream after task is done using cleanup_cb parameter
 
     def arm_erase(self):
         self.worker = self.ArmWorker()
@@ -203,6 +219,7 @@ class VideoStreamer(QMainWindow):
         self.arm_worker_start(
             self.worker, lambda: self.worker.write(text), self.write_btn
         )
+        # self.arm_worker_start(self.worker, self.worker.write, self.write_btn)
 
     def arm_reset_location_and_gripper(self):
         self.worker = self.ArmWorker()
@@ -211,8 +228,8 @@ class VideoStreamer(QMainWindow):
         )
 
     def disconnet_arm(self):
-        worker = self.ArmWorker()
-        self.arm_worker_start(worker, worker.quit)
+        self.worker = self.ArmWorker()
+        self.arm_worker_start(self.worker, self.worker.quit)
         pprint("xArm disconnected")
 
         # Enable connect button
@@ -224,6 +241,7 @@ class VideoStreamer(QMainWindow):
         self.erase_btn.setEnabled(False)
         self.reset_btn.setEnabled(False)
         self.disconnect_arm_btn.setEnabled(False)
+        self.force_stop_btn.setEnabled(False)
 
     def force_stop_arm(self):
         pprint("Force stopping xArm...")

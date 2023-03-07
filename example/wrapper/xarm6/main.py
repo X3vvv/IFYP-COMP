@@ -19,13 +19,33 @@ def get_command(user_input: str):
 
         with open("chatGPT-pretrain.txt", "r") as f:
             pretrain_prompt = f.read()
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": pretrain_prompt},
-                {"role": "user", "content": prompt},
-            ],
-        )
+
+        apologize_list = [
+            "Thank you for your patience. I just need a few moments to resolve the issue.",
+            "I appreciate your understanding. I need to check on something quickly.",
+            "Please bear with me for just a moment. I'm working on a solution.",
+            "I apologize for the wait. I'm still working to find a resolution for you.",
+            "Thanks for waiting. I just need a little more time to get this sorted.",
+            "I'm sorry for the delay. I'm doing everything I can to help you as soon as possible.",
+            "I appreciate your time. Please hold on for a few more minutes while I investigate.",
+            "Thank you for your patience. I'm checking on something for you and will be right back.",
+            "I'm sorry for the inconvenience. Let me take a moment to look into this further.",
+            "Thanks for holding. I'm working to find a solution and will be with you shortly.",
+        ]
+        while True:
+            try:
+                response = openai.ChatCompletion.create(
+                    model="gpt-3.5-turbo",
+                    messages=[
+                        {"role": "system", "content": pretrain_prompt},
+                        {"role": "user", "content": prompt},
+                    ],
+                )
+                break
+            except Exception as e:
+                prompt = random.choice(apologize_list)
+                speak(prompt)
+
         text_response = response["choices"][0]["message"]["content"]
 
         return text_response

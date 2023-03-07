@@ -339,6 +339,8 @@ class XArmCtrler(object):
                 self.arm.run_gcode_file(path=file_name)
                 time.sleep(5)
 
+            pprint("Writing...")
+
             lines = textwrap.wrap(text, 9)  # split text into lines
 
             for one_line in lines:  # write each line

@@ -11,8 +11,11 @@ import threading
 def screen_capture():
     # Capture image from Webcam
     cap = cv2.VideoCapture(0)
-
+    if not cap.isOpened():
+        print("Unable to open camera")
     ret, frame = cap.read()
+    if not ret:
+        print("Unable to capture image")
 
     cv2.imwrite("snapshot.jpg", frame)
 
