@@ -1,5 +1,3 @@
-import time
-import traceback
 import SpeechToText
 import pyttsx3
 import openai
@@ -66,6 +64,8 @@ def get_command(user_input: str):
         return XArmCtrler.PAINT, None
     elif cmd == XArmCtrler.QUIT:  # if last_line is "quit", return "quit"
         return XArmCtrler.QUIT, None
+    elif cmd == XArmCtrler.RESET:  # if last_line is "reset", return "reset"
+        return XArmCtrler.RESET, None
     else:  # normal chat with user
         return XArmCtrler.NORMAL_CHAT, reply
 
@@ -132,6 +132,10 @@ def main():
                 speak("Start writing!")
                 xArm.write(cmd_param)
                 speak("Finish writing! What else can I do for you?")
+            elif cmd == XArmCtrler.RESET:
+                speak("Resetting...")
+                xArm.reset_arm()
+                speak("Reset successfully! What else can I do for you?")
             elif cmd == XArmCtrler.NORMAL_CHAT:
                 speak(cmd_param)
             else:

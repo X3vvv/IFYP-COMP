@@ -36,6 +36,7 @@ class XArmCtrler(object):
     ERASE = "erase"
     PAINT = "paint"
     QUIT = "quit"
+    RESET = "reset"
     NORMAL_CHAT = "normal chat"
 
     # Arm movement measurement size
