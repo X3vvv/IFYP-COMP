@@ -152,7 +152,7 @@ class XArmCtrler(object):
         """Set gripper position."""
         if self.arm.error_code == 0 and not self.params["quit"]:
             code = self.arm.set_gripper_position(
-                pos, wait=True, speed=5000, auto_enable=True
+                pos, wait=False, speed=5000, auto_enable=True
             )
             if code != 0:
                 self.params["quit"] = True
@@ -210,7 +210,7 @@ class XArmCtrler(object):
         # Open gripper
         self.set_gripper_position(self.GRIPPER_POSITION_OPEN)
         # Move down gripper to surround pen
-        self.set_servo_angle([43.5, -14.9, -23.6, -0.8, 38.3, 90.4])
+        self.set_servo_angle([43.5, -15.4, -23.9, -0.8, 38.9, 90.4])
         self.set_tcp_load(0.82, [0, 0, 48])
         # Close gripper
         self.set_gripper_position(self.GRIPPER_POSITION_CLOSE_PEN)
@@ -242,19 +242,22 @@ class XArmCtrler(object):
     def clean_whiteboard(self):
         pprint("Cleaning whiteboard...")
         self.set_position([187.2, -124.6, 189.7, -179.6, -0.5, -46.4])
-        for _ in range(2):
+        # Move eraser to touch the new whitebroad
+        self.set_gripper_position(self.GRIPPER_POSITION_OPEN)
+        self.set_gripper_position(self.GRIPPER_POSITION_CLOSE_ERASER)
+        for _ in range(1):
             if self.params["quit"]:
                 break
             self.set_position([187.2, 111.4, 188.8, -179.6, -0.5, -46.4])
             self.set_position([187.2, -124.6, 189.7, -179.6, -0.5, -46.4])
             self.set_position([224.5, -124.6, 189.7, -179.6, -0.5, -46.4])
-        for _ in range(2):
+        for _ in range(1):
             if self.params["quit"]:
                 break
             self.set_position([224.5, 114.9, 188.7, -179.6, -0.5, -46.4])
             self.set_position([224.5, -124.6, 189.7, -179.6, -0.5, -46.4])
             self.set_position([274.5, -121.3, 189.7, -179.6, -0.5, -46.4])
-        for _ in range(2):
+        for _ in range(1):
             if self.params["quit"]:
                 break
             self.set_position([274.5, 114.9, 189.7, -179.6, -0.5, -46.4])
