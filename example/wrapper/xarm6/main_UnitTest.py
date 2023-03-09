@@ -99,9 +99,9 @@ def say_goodbye():
 def main():
     """Main function."""
     xArm = XArmCtrler("192.168.1.210")
-    word = "Testing the whiteboard"
-    xArm.write(word)
-
+    #word = "Testing the whiteboard"
+    #xArm.write(word)
+    #xArm.erase()
     """
     try:
         speak("Hi, I'm xArm. What can I do for you?")

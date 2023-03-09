@@ -41,6 +41,7 @@ class XArmCtrler(object):
 
     # Arm movement measurement size
     GRIPPER_POSITION_OPEN = 420
+    GRIPPER_POSITION_OPEN_ERASER = 500
     GRIPPER_POSITION_CLOSE_PEN = 95
     GRIPPER_POSITION_CLOSE_ERASER = 303
     GRIPPER_POSITION_CLOSE_COMPLETELY = 0
@@ -223,11 +224,11 @@ class XArmCtrler(object):
     def grab_eraser(self):
         pprint("Grabing eraser...")
         # Move to above the eraser
-        self.set_servo_angle([54.3, -17.5, -42.4, -0.7, 59.6, 101.1])
+        self.set_position([220.5, 306.0, 353.1, -179.6, -0.5, -46.4])
         # Open gripper
-        self.set_gripper_position(self.GRIPPER_POSITION_OPEN)
+        self.set_gripper_position(self.GRIPPER_POSITION_OPEN_ERASER)
         # Move down gripper to surround eraser
-        self.set_servo_angle([54.2, 5.0, -31.6, -1.3, 26.3, 101.8])
+        self.set_position([220.2, 306.3, 177.6, -179.6, -0.5, -46.4])
         # Close gripper
         self.set_gripper_position(self.GRIPPER_POSITION_CLOSE_ERASER)
         self.set_tcp_load(0, [0, 0, 0])
@@ -235,33 +236,39 @@ class XArmCtrler(object):
     def move_eraser_to_whiteboard(self):
         pprint("Moving eraser to whiteboard...")
         # Move above eraser home
-        self.set_servo_angle([54.3, -14.2, -38.2, -0.7, 52.1, 101.2])
+        self.set_position([220.5, 306.0, 353.1, -179.6, -0.5, -46.4])
         # Move to above whiteboard at erasing start location
-        self.set_servo_angle([30.9, -56.2, -12.9, -0.4, 68.6, 77.4])
+        self.set_position([187.1, 111.5, 323.6, -179.6, -0.5, -46.4])
 
     def clean_whiteboard(self):
         pprint("Cleaning whiteboard...")
-        self.set_position([187.2, -124.6, 189.7, -179.6, -0.5, -46.4])
+        self.set_position([187.2, -171.8, 189.7, -179.6, -0.5, -46.4])
         # Move eraser to touch the new whitebroad
         self.set_gripper_position(self.GRIPPER_POSITION_OPEN)
         self.set_gripper_position(self.GRIPPER_POSITION_CLOSE_ERASER)
         for _ in range(1):
             if self.params["quit"]:
                 break
-            self.set_position([187.2, 111.4, 188.8, -179.6, -0.5, -46.4])
-            self.set_position([187.2, -124.6, 189.7, -179.6, -0.5, -46.4])
-            self.set_position([224.5, -124.6, 189.7, -179.6, -0.5, -46.4])
+            self.set_position([187.2, 159.1, 188.8, -179.6, -0.5, -46.4])
+            self.set_position([187.2, -171.8, 189.7, -179.6, -0.5, -46.4])
+        self.set_position([224.5, -171.8, 189.7, -179.6, -0.5, -46.4])
         for _ in range(1):
             if self.params["quit"]:
                 break
-            self.set_position([224.5, 114.9, 188.7, -179.6, -0.5, -46.4])
-            self.set_position([224.5, -124.6, 189.7, -179.6, -0.5, -46.4])
-            self.set_position([274.5, -121.3, 189.7, -179.6, -0.5, -46.4])
+            self.set_position([224.5, 159.1, 188.7, -179.6, -0.5, -46.4])
+            self.set_position([224.5, -171.8, 189.7, -179.6, -0.5, -46.4])
+        self.set_position([274.5, -171.8, 189.7, -179.6, -0.5, -46.4])
         for _ in range(1):
             if self.params["quit"]:
                 break
-            self.set_position([274.5, 114.9, 189.7, -179.6, -0.5, -46.4])
-            self.set_position([274.5, -121.3, 189.7, -179.6, -0.5, -46.4])
+            self.set_position([274.5, 159.1, 189.7, -179.6, -0.5, -46.4])
+            self.set_position([274.5, -171.8, 189.7, -179.6, -0.5, -46.4])
+        self.set_position([305.3, -171.8, 189.7, -179.6, -0.5, -46.4])
+        for _ in range(1):
+            if self.params["quit"]:
+                break
+            self.set_position([305.3, 159.1, 189.7, -179.6, -0.5, -46.4])
+            self.set_position([305.3, -171.8, 189.7, -179.6, -0.5, -46.4])
 
     def put_back_eraser(self):
         pprint("Putting back eraser...")
