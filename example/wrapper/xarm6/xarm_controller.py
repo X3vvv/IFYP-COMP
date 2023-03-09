@@ -152,7 +152,7 @@ class XArmCtrler(object):
         """Set gripper position."""
         if self.arm.error_code == 0 and not self.params["quit"]:
             code = self.arm.set_gripper_position(
-                pos, wait=False, speed=5000, auto_enable=True
+                pos, wait=True, speed=5000, auto_enable=True
             )
             if code != 0:
                 self.params["quit"] = True
@@ -180,7 +180,7 @@ class XArmCtrler(object):
                 speed=self.params["speed"],
                 mvacc=self.params["acc"],
                 radius=-1.0,
-                wait=False,
+                wait=True
             )
             if code != 0:
                 self.params["quit"] = True
@@ -216,7 +216,7 @@ class XArmCtrler(object):
         self.set_gripper_position(self.GRIPPER_POSITION_CLOSE_PEN)
         self.set_tcp_load(0, [0, 0, 0])
         # Move up above pen home location
-        self.set_position([238.3, 226.4, 315.5, -179.8, -0.5, -46.3])
+        self.set_position([238.3, 226.4, 316.5, -179.8, -0.5, -46.3])
         # Move to above whiteboard
         self.set_position([157.2, 8.4, 272.4, -179.6, -0.5, -46.4])
 
