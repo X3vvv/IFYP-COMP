@@ -90,7 +90,7 @@ class XArmCtrler(object):
         if not self.params["quit"]:
             self.params["speed"] = 100
             self.params["acc"] = 2000
-            self.params["variables"]["Center_x"] = -1
+            self.params["variables"]["Center_x"] = 0
             self.params["variables"]["Center_y"] = -2
             self.params["variables"]["Offset_x"] = (
                 self.params["variables"].get("Center_x", 0) * -40
@@ -211,7 +211,7 @@ class XArmCtrler(object):
         # Open gripper
         self.set_gripper_position(self.GRIPPER_POSITION_OPEN)
         # Move down gripper to surround pen
-        self.set_position([239.1, 226.9, 245.5, -179.5, -0.5, -46.3])
+        self.set_position([239.1, 226.9, 243.5, -179.5, -0.5, -46.3])
         self.set_tcp_load(0.82, [0, 0, 48])
         # Close gripper
         self.set_gripper_position(self.GRIPPER_POSITION_CLOSE_PEN)
@@ -441,7 +441,7 @@ class XArmCtrler(object):
 
             def write_with_gcode(character: str):
                 if not character.isalpha():  # skip non-letter characters
-                    time.sleep(0)
+                    update_arm_position() #move arm to next letter's position
                     return
                 folder_name = "Letters" if character.isupper() else "sletter"
                 file_name = r".\assets\gcode\{}\{}.nc".format(folder_name, character)
@@ -479,7 +479,7 @@ class XArmCtrler(object):
 
         # Top-Left coordinate(-1,-2) to (3,10) reference point, modify the coordinate you want:
         if not self.params["quit"]:
-            self.params["variables"]["Center_x"] = -1
+            self.params["variables"]["Center_x"] = 0
             self.params["variables"]["Center_y"] = -2
 
         writing()
