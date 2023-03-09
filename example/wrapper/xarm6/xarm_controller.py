@@ -89,8 +89,8 @@ class XArmCtrler(object):
         if not self.params["quit"]:
             self.params["speed"] = 100
             self.params["acc"] = 2000
-            self.params["variables"]["Center_x"] = 1
-            self.params["variables"]["Center_y"] = 1
+            self.params["variables"]["Center_x"] = -1
+            self.params["variables"]["Center_y"] = -2
             self.params["variables"]["Offset_x"] = (
                 self.params["variables"].get("Center_x", 0) * -40
             )
@@ -165,7 +165,7 @@ class XArmCtrler(object):
                 angle=angle,
                 speed=self.params["angle_speed"],
                 mvacc=self.params["angle_acc"],
-                wait=True,
+                wait=False,
                 radius=-1.0,
             )
             if code != 0:
@@ -206,19 +206,19 @@ class XArmCtrler(object):
         """Grab pen."""
         pprint("Grabbing pen...")
         # Move to above of pen
-        self.set_servo_angle([43.6, -25.0, -29.6, -0.6, 54.4, 90.2])
+        self.set_position([238.3, 226.4, 315.5, -179.8, -0.5, -46.3])
         # Open gripper
         self.set_gripper_position(self.GRIPPER_POSITION_OPEN)
         # Move down gripper to surround pen
-        self.set_servo_angle([43.5, -15.4, -23.9, -0.8, 38.9, 90.4])
+        self.set_position([239.1, 226.9, 245.5, -179.5, -0.5, -46.3])
         self.set_tcp_load(0.82, [0, 0, 48])
         # Close gripper
         self.set_gripper_position(self.GRIPPER_POSITION_CLOSE_PEN)
         self.set_tcp_load(0, [0, 0, 0])
         # Move up above pen home location
-        self.set_servo_angle([43.6, -25.0, -29.6, -0.6, 54.4, 90.2])
+        self.set_position([238.3, 226.4, 315.5, -179.8, -0.5, -46.3])
         # Move to above whiteboard
-        self.set_servo_angle([3.1, -79.9, 2.8, -0.1, 76.5, 49.5])
+        self.set_position([157.2, 8.4, 272.4, -179.6, -0.5, -46.4])
 
     def grab_eraser(self):
         pprint("Grabing eraser...")
@@ -349,7 +349,7 @@ class XArmCtrler(object):
         self.reset_location_and_gripper()
         self.grab_pen()
 
-        # Top-Left coordinate(0,0) to (2,8) reference point
+        # Top-Left coordinate(-1,-2) to (3,10) reference point
         if not self.params["quit"]:
             # Modify the coordinate you want:
             self.params["variables"]["Center_x"] = 1
@@ -375,7 +375,7 @@ class XArmCtrler(object):
 
         # Move to above the whiteboard and ready to draw
         self.set_position([180.0, -105.0, 270.3, -178.8, -1.1, -43.6])
-        self.set_position([180.0, -105.0, 237.0, -178.8, -1.1, -43.6])
+        self.set_position([180.0, -105.0, 236.8, -178.8, -1.1, -43.6])
 
         # Run gcode file
         if not self.params["quit"]:
@@ -444,7 +444,7 @@ class XArmCtrler(object):
 
             pprint("Writing...")
 
-            lines = textwrap.wrap(text, 9)  # split text into lines
+            lines = textwrap.wrap(text, 13)  # split text into lines
 
             for one_line in lines:  # write each line
                 for character in one_line:  # write each character
@@ -460,7 +460,7 @@ class XArmCtrler(object):
                         XArmCtrler.WHITEBOARD_IS_FULL = True
                         break
                     self.params["variables"]["Center_x"] += 1  # go to next line
-                    self.params["variables"]["Center_y"] = 0  # go to first pos in line
+                    self.params["variables"]["Center_y"] = -2  # go to first pos in line
 
         if not self.params["quit"]:
             self.arm.set_world_offset([0, 0, 0, 0, 0, 0])
@@ -470,10 +470,10 @@ class XArmCtrler(object):
         self.reset_location_and_gripper()
         self.grab_pen()
 
-        # Top-Left coordinate(0,0) to (2,8) reference point, modify the coordinate you want:
+        # Top-Left coordinate(-1,-2) to (3,10) reference point, modify the coordinate you want:
         if not self.params["quit"]:
-            self.params["variables"]["Center_x"] = 0
-            self.params["variables"]["Center_y"] = 0
+            self.params["variables"]["Center_x"] = -1
+            self.params["variables"]["Center_y"] = -2
 
         writing()
         self.put_back_pen()
