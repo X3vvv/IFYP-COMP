@@ -211,7 +211,7 @@ class XArmCtrler(object):
         # Open gripper
         self.set_gripper_position(self.GRIPPER_POSITION_OPEN)
         # Move down gripper to surround pen
-        self.set_position([239.1, 226.9, 243.5, -179.5, -0.5, -46.3])
+        self.set_position([239.1, 226.9, 244, -179.5, -0.5, -46.3])
         self.set_tcp_load(0.82, [0, 0, 48])
         # Close gripper
         self.set_gripper_position(self.GRIPPER_POSITION_CLOSE_PEN)
