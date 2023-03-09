@@ -211,7 +211,7 @@ class XArmCtrler(object):
         # Open gripper
         self.set_gripper_position(self.GRIPPER_POSITION_OPEN)
         # Move down gripper to surround pen
-        self.set_position([239.1, 226.9, 244, -179.5, -0.5, -46.3])
+        self.set_position([239.1, 226.9, 244.2, -179.5, -0.5, -46.3])
         self.set_tcp_load(0.82, [0, 0, 48])
         # Close gripper
         self.set_gripper_position(self.GRIPPER_POSITION_CLOSE_PEN)
@@ -249,26 +249,26 @@ class XArmCtrler(object):
         for _ in range(1):
             if self.params["quit"]:
                 break
-            self.set_position([187.2, 159.1, 188.8, -179.6, -0.5, -46.4])
-            self.set_position([187.2, -171.8, 189.7, -179.6, -0.5, -46.4])
-        self.set_position([224.5, -171.8, 189.7, -179.6, -0.5, -46.4])
+            self.set_position([187.2, 159.1, 185.5, -179.6, -0.5, -46.4])
+            self.set_position([187.2, -171.8, 185.5, -179.6, -0.5, -46.4])
+        self.set_position([224.5, -171.8, 185.5, -179.6, -0.5, -46.4])
         for _ in range(1):
             if self.params["quit"]:
                 break
-            self.set_position([224.5, 159.1, 188.7, -179.6, -0.5, -46.4])
-            self.set_position([224.5, -171.8, 189.7, -179.6, -0.5, -46.4])
-        self.set_position([274.5, -171.8, 189.7, -179.6, -0.5, -46.4])
+            self.set_position([224.5, 159.1, 185.5, -179.6, -0.5, -46.4])
+            self.set_position([224.5, -171.8, 185.5, -179.6, -0.5, -46.4])
+        self.set_position([274.5, -171.8, 185.5, -179.6, -0.5, -46.4])
         for _ in range(1):
             if self.params["quit"]:
                 break
-            self.set_position([274.5, 159.1, 189.7, -179.6, -0.5, -46.4])
-            self.set_position([274.5, -171.8, 189.7, -179.6, -0.5, -46.4])
-        self.set_position([305.3, -171.8, 189.7, -179.6, -0.5, -46.4])
+            self.set_position([274.5, 159.1, 185.5, -179.6, -0.5, -46.4])
+            self.set_position([274.5, -171.8, 185.5, -179.6, -0.5, -46.4])
+        self.set_position([305.3, -171.8, 185.5, -179.6, -0.5, -46.4])
         for _ in range(1):
             if self.params["quit"]:
                 break
-            self.set_position([305.3, 159.1, 189.7, -179.6, -0.5, -46.4])
-            self.set_position([305.3, -171.8, 189.7, -179.6, -0.5, -46.4])
+            self.set_position([305.3, 159.1, 185.5, -179.6, -0.5, -46.4])
+            self.set_position([305.3, -171.8, 185.5, -179.6, -0.5, -46.4])
 
     def put_back_eraser(self):
         pprint("Putting back eraser...")
