@@ -46,6 +46,7 @@ class XArmCtrler(object):
     GRIPPER_POSITION_CLOSE_ERASER = 303
     GRIPPER_POSITION_CLOSE_COMPLETELY = 0
 
+
     params = None
 
     def __init__(self, ip: str = "192.168.1.210", *args, **kwargs):
@@ -90,7 +91,7 @@ class XArmCtrler(object):
         if not self.params["quit"]:
             self.params["speed"] = 100
             self.params["acc"] = 2000
-            self.params["variables"]["Center_x"] = 0
+            self.params["variables"]["Center_x"] = -0.5
             self.params["variables"]["Center_y"] = -2
             self.params["variables"]["Offset_x"] = (
                 self.params["variables"].get("Center_x", 0) * -40
@@ -205,13 +206,18 @@ class XArmCtrler(object):
 
     def grab_pen(self):
         """Grab pen."""
+        WHITEBOARD_PEN_POSITION_ABOVE_HEIGHT = 315.5
+        WHITEBOARD_PEN_POSITION_HEIGHT = 244.4
+        BRUSH_PEN_POSITION_ABOVE_HEIGHT = 350
+        BRUSH_PEN_POSITION_HEIGHT = 270
+
         pprint("Grabbing pen...")
         # Move to above of pen
-        self.set_position([238.3, 226.4, 315.5, -179.8, -0.5, -46.3])
+        self.set_position([238.3, 226.4, WHITEBOARD_PEN_POSITION_ABOVE_HEIGHT, -179.8, -0.5, -46.3])
         # Open gripper
         self.set_gripper_position(self.GRIPPER_POSITION_OPEN)
         # Move down gripper to surround pen
-        self.set_position([239.1, 226.9, 244.4, -179.5, -0.5, -46.3])
+        self.set_position([239.1, 226.9, WHITEBOARD_PEN_POSITION_HEIGHT, -179.5, -0.5, -46.3])
         self.set_tcp_load(0.82, [0, 0, 48])
         # Close gripper
         self.set_gripper_position(self.GRIPPER_POSITION_CLOSE_PEN)
@@ -440,20 +446,27 @@ class XArmCtrler(object):
                 self.set_position([180.0, -105.0, 245.0, -178.8, -1.1, -43.6])
 
             def writing_duration(character):
-                list_6sec = ['B', 'G', 'S', 'Q']
-                list_5sec = ['A', 'C', 'D', 'E', 'H', 'J', 'K', 'M', 'N', 'O', 'P', 'R', 'U', 'W', 'Y', 'Z']
-                list_3sec = ['I', 'L', 'X', 'F', 'T', 'V']
-                if character in list_6sec:
-                    return 6
-                elif character in list_5sec:
+                # a4 b5 c3 d5 e3 f4 g7 h3 i2 j3 k3 l2 m7 n3 o3 p4 q5 r3 s3 t3 u4 v3 w3 x3 y3 z2
+                LIST_Sec_7 = ['G','B','Q','g','m']
+                LIST_Sec_5 = ['H','O','S','R','b','d','q','a','p']
+                LIST_Sec_4 = ['F','A','C','D','E','M','U','W','I','K','P','Y','f','u','e','h','n','o','t','k']
+                LIST_Sec_3 = ['J','T','N','X','Z','c','j','r','s','v','w','x','y']
+                LIST_Sec_2 = ['L','V','i','l','z','!',',','.']
+                if character in LIST_Sec_7:
+                    return 7
+                elif character in LIST_Sec_5:
                     return 5
-                elif character in list_3sec:
-                    return 3
-                else:
+                elif character in LIST_Sec_4:
                     return 4
+                elif character in LIST_Sec_3:
+                    return 3
+                elif character in LIST_Sec_2:
+                    return 2
+                else:
+                    return 5
 
             def write_with_gcode(character: str):
-                if not character.isalpha():  # skip non-letter characters
+                if character.isspace():  # skip spaces
                     update_arm_position() #move arm to next letter's position
                     return
                 folder_name = "Letters" if character.isupper() else "sletter"
@@ -492,7 +505,7 @@ class XArmCtrler(object):
 
         # Top-Left coordinate(-1,-2) to (3,10) reference point, modify the coordinate you want:
         if not self.params["quit"]:
-            self.params["variables"]["Center_x"] = 0
+            self.params["variables"]["Center_x"] = -0.5
             self.params["variables"]["Center_y"] = -2
 
         writing()
