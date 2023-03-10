@@ -211,7 +211,7 @@ class XArmCtrler(object):
         # Open gripper
         self.set_gripper_position(self.GRIPPER_POSITION_OPEN)
         # Move down gripper to surround pen
-        self.set_position([239.1, 226.9, 244.2, -179.5, -0.5, -46.3])
+        self.set_position([239.1, 226.9, 244.4, -179.5, -0.5, -46.3])
         self.set_tcp_load(0.82, [0, 0, 48])
         # Close gripper
         self.set_gripper_position(self.GRIPPER_POSITION_CLOSE_PEN)
@@ -246,25 +246,25 @@ class XArmCtrler(object):
         # Move eraser to touch the new whitebroad
         self.set_gripper_position(self.GRIPPER_POSITION_OPEN)
         self.set_gripper_position(self.GRIPPER_POSITION_CLOSE_ERASER)
-        for _ in range(1):
+        for _ in range(2):
             if self.params["quit"]:
                 break
             self.set_position([187.2, 159.1, 185.5, -179.6, -0.5, -46.4])
             self.set_position([187.2, -171.8, 185.5, -179.6, -0.5, -46.4])
         self.set_position([224.5, -171.8, 185.5, -179.6, -0.5, -46.4])
-        for _ in range(1):
+        for _ in range(2):
             if self.params["quit"]:
                 break
             self.set_position([224.5, 159.1, 185.5, -179.6, -0.5, -46.4])
             self.set_position([224.5, -171.8, 185.5, -179.6, -0.5, -46.4])
         self.set_position([274.5, -171.8, 185.5, -179.6, -0.5, -46.4])
-        for _ in range(1):
+        for _ in range(2):
             if self.params["quit"]:
                 break
             self.set_position([274.5, 159.1, 185.5, -179.6, -0.5, -46.4])
             self.set_position([274.5, -171.8, 185.5, -179.6, -0.5, -46.4])
         self.set_position([305.3, -171.8, 185.5, -179.6, -0.5, -46.4])
-        for _ in range(1):
+        for _ in range(2):
             if self.params["quit"]:
                 break
             self.set_position([305.3, 159.1, 185.5, -179.6, -0.5, -46.4])
@@ -439,6 +439,19 @@ class XArmCtrler(object):
                 # Move arm to next letter position
                 self.set_position([180.0, -105.0, 245.0, -178.8, -1.1, -43.6])
 
+            def writing_duration(character):
+                list_6sec = ['B', 'G', 'S', 'Q']
+                list_5sec = ['A', 'C', 'D', 'E', 'H', 'J', 'K', 'M', 'N', 'O', 'P', 'R', 'U', 'W', 'Y', 'Z']
+                list_3sec = ['I', 'L', 'X', 'F', 'T', 'V']
+                if character in list_6sec:
+                    return 6
+                elif character in list_5sec:
+                    return 5
+                elif character in list_3sec:
+                    return 3
+                else:
+                    return 4
+
             def write_with_gcode(character: str):
                 if not character.isalpha():  # skip non-letter characters
                     update_arm_position() #move arm to next letter's position
@@ -447,7 +460,7 @@ class XArmCtrler(object):
                 file_name = r".\assets\gcode\{}\{}.nc".format(folder_name, character)
                 if not self.params["quit"]:
                     self.arm.run_gcode_file(path=file_name)
-                time.sleep(5)
+                time.sleep(writing_duration(character))
 
             pprint("Writing...")
 
