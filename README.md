@@ -1,16 +1,20 @@
 # xArm-Python-SDK
 
 ## Overview
+
 xArm Python SDK
 
 ## Caution
+
 - During use, people should stay away from the robot arm to avoid accidental injury or damage to other items by the robot arm.
 - Protect the arm before use.
 - Before you exercise, please make sure you don't encounter obstacles.
 - Protect the arm before unlocking the motor.
 
 ## Installation
+
 Install is not necessary, you can run examples without installation.Only Python3 is supported.
+
 - download
 
   ```bash
@@ -25,39 +29,47 @@ Install is not necessary, you can run examples without installation.Only Python3
   
 - other steps
 
-  1. Go to Google Cloud Platform, [create and download service account key](https://cloud.google.com/iam/docs/keys-create-delete) (usually a json file), add the path to the service account key file to system PATH.
-  2. Install [gcloud](https://cloud.google.com/sdk/docs/install?hl=zh-cn)
-  3. Get an OpenAI API key from your OpenAI account and change the API key file path in the program into your own.
+  1. Go to Google Cloud Platform, [create and download service account key](https://cloud.google.com/iam/docs/keys-create-delete) (usually a json file), add replace the service account key file path in `main.py` to your own.
+  2. Install [gcloud](https://cloud.google.com/sdk/docs/install?hl=zh-cn) and deploy
+  3. Get an OpenAI API key from your OpenAI account and replace the API key file path in `main.py` into your own.
 
 ## Doc
+
 - #### [API Document](doc/api/xarm_api.md)
 
 - #### [API Code Document](doc/api/xarm_api_code.md)
 
 ## Update Summary
+
 - > ### 1.11.6
+
   - Correct the ambiguity that the `set_position_aa` interface is true when both relative and is_tool_coord are true. After the correction, when is_tool_coord is true, relative is invalid (previously is_tool_coord was invalid when relative was true)
 
 - > ### 1.11.5
+
   - Optimization pause time is too long (wait=true)
   - Add common motion api (Enabled after firmware version 1.11.100)
   - The Cartesian motion-related interface adds the motion_type parameter to determine the planning method (Enabled after firmware version 1.11.100)
 
 - > ### 1.11.0
+
   - Support transparent transmission
     - 240: `set_tgpio_modbus_timeout(..., is_transparent_transmission=True)`
     - 241: `getset_tgpio_modbus_data(..., is_transparent_transmission=True)`
   - Modified the centroid unit of the `ft_sensor_iden_load` and `ft_sensor_cali_load` interfaces to millimeters (originally meters)
 
 - > ### 1.10.0
+
   - Use monotonic time
   - Fix several bugs
   
 - > ### 1.9.10
+
   - Support Lite6 Model
   - Fix several bugs
 
 - > ### 1.9.0
+
   - Support friction parameter identification interface
   - Support relative motion
   - Support xarm6-type11 firmware
@@ -65,6 +77,7 @@ Install is not necessary, you can run examples without installation.Only Python3
   - Fix several bugs
 
 - > ### 1.8.4
+
   - Support the Six-axis Force Torque Sensor (not a third party)
   - Add threads to handle callbacks
   - Modify the reporting processing logic and optimize the processing of sticky packets
@@ -80,9 +93,7 @@ Install is not necessary, you can run examples without installation.Only Python3
   - Support linear track interface (requires firmware 1.8.0 or higher)
   - Support calling some studio APIs
 
-
 - >### [More](ReleaseNotes.md)
-
 
 ## [Example](example/wrapper/)
 
@@ -190,8 +201,8 @@ __Note: Before running the example, please modify the ip value in the [robot.con
 
 - ##### [get_report_data_with_protocol](example/wrapper/common/get_report_data_with_protocol.py)
 
-
 - #### Import
+
   ```python
   from xarm.wrapper import XArmAPI
   arm = XArmAPI('COM5')
@@ -201,12 +212,14 @@ __Note: Before running the example, please modify the ip value in the [robot.con
   ```
 
 - #### Connect/Disconnect
+
   ```python
   arm.connect(...)
   arm.disconnect()
   ```
 
 - #### Move
+
   ```python
   arm.reset(...)
   arm.set_position(...)
@@ -223,6 +236,7 @@ __Note: Before running the example, please modify the ip value in the [robot.con
   ```
 
 - #### Set
+
   ```python
   arm.set_servo_attach(...)
   arm.set_servo_detach(...)
@@ -233,6 +247,7 @@ __Note: Before running the example, please modify the ip value in the [robot.con
   ```
 
 - #### Get
+
   ```python
   arm.get_version()
   arm.get_state()
@@ -246,6 +261,7 @@ __Note: Before running the example, please modify the ip value in the [robot.con
   ```
 
 - #### Setting
+
   ```python
   arm.set_tcp_offset(...)
   arm.set_tcp_jerk(...)
@@ -266,6 +282,7 @@ __Note: Before running the example, please modify the ip value in the [robot.con
   ```
 
 - #### Gripper
+
   ```python
   arm.set_gripper_enable(...)
   arm.set_gripper_mode(...)
@@ -348,6 +365,7 @@ __Note: Before running the example, please modify the ip value in the [robot.con
   ```
 
 - #### FT Sensor
+
   ```python
   arm.set_impedance(...)
   arm.set_impedance_mbk(...)
@@ -366,6 +384,7 @@ __Note: Before running the example, please modify the ip value in the [robot.con
   ```
 
 - #### Other
+
   ```python
   arm.set_pause_time(...)
   arm.shutdown_system(...)
@@ -376,6 +395,7 @@ __Note: Before running the example, please modify the ip value in the [robot.con
   ```
 
 - #### Register/Release
+
   ```python
   arm.register_report_callback(...)
   arm.register_report_location_callback(...)
@@ -400,6 +420,7 @@ __Note: Before running the example, please modify the ip value in the [robot.con
   ```
 
 - #### Property
+
   ```python
   arm.connected
   arm.default_is_radian
@@ -441,4 +462,3 @@ __Note: Before running the example, please modify the ip value in the [robot.con
   arm.currents
   arm.cgpio_states
   ```
-
