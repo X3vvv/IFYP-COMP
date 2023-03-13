@@ -99,7 +99,7 @@ def say_goodbye():
 def main():
     """Main function."""
     xArm = XArmCtrler("192.168.1.210")
-    word = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    word = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     xArm.write(word)
     #xArm.erase()
     """

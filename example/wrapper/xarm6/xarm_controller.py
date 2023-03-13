@@ -48,7 +48,7 @@ class XArmCtrler(object):
 
     BRUSH_PEN_POSITION_ABOVE_HEIGHT = 355
     BRUSH_PEN_POSITION_ABOVE_WHITEBOARD_HEIGHT = 275
-    BRUSH_PEN_POSITION_HEIGHT = 269  # drawing height 268 and above whiteboard height can be 280
+    BRUSH_PEN_POSITION_HEIGHT = 270.3  # drawing height 268 and above whiteboard height can be 280
 
     ERASER_POSITION_ABOVE_HEIGHT = 365
 
@@ -451,12 +451,11 @@ class XArmCtrler(object):
                 self.set_position([180.0, -105.0, self.BRUSH_PEN_POSITION_ABOVE_WHITEBOARD_HEIGHT, -178.8, -1.1, -43.6])
 
             def writing_duration(character):
-                # a4 b5 c3 d5 e3 f4 g7 h3 i2 j3 k3 l2 m7 n3 o3 p4 q5 r3 s3 t3 u4 v3 w3 x3 y3 z2
-                LIST_Sec_7 = ['G','B','Q','g','m']
-                LIST_Sec_5 = ['H','O','S','R','b','d','q','a','p']
-                LIST_Sec_4 = ['F','A','C','D','E','M','U','W','I','K','P','Y','f','u','e','h','n','o','t','k']
-                LIST_Sec_3 = ['J','T','N','X','Z','c','j','r','s','v','w','x','y']
-                LIST_Sec_2 = ['L','V','i','l','z','!',',','.']
+                LIST_Sec_7 = ['G','B','Q','g','m','8']
+                LIST_Sec_5 = ['H','O','S','R','b','d','q','a','p','3','5','6','0','9','D','I']
+                LIST_Sec_4 = ['F','A','C','E','M','U','W','K','P','Y','f','u','e','h','n','o','t','k','X','2']
+                LIST_Sec_3 = ['J','T','N','Z','c','j','r','s','v','w','x','y','i','1','4']
+                LIST_Sec_2 = ['L','V','l','z','!',',','.','7']
                 if character in LIST_Sec_7:
                     return 7
                 elif character in LIST_Sec_5:
