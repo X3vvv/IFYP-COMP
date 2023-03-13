@@ -344,13 +344,13 @@ class XArmCtrler(object):
         for contour in contours:
             # Move to the starting point of the contour
             x, y = contour[0][0]
-            gcode_lines.append(f"G1 Z245")
+            gcode_lines.append(f"G1 Z280")
 
             # Move along the contour and generate cutting commands
             for point in contour[1:]:
                 x, y = point[0]
                 gcode_lines.append(
-                    f"G1 X{x+100} Y{y+60} Z237 F100"
+                    f"G1 X{x+100} Y{y+60} Z267.9 F100"
                 )  # Cutting command with depth of cut and feed rate
 
         # Save the G-code to file
@@ -392,8 +392,8 @@ class XArmCtrler(object):
             time.sleep(0.5)
 
         # Move to above the whiteboard and ready to draw
-        self.set_position([180.0, -105.0, 270.3, -178.8, -1.1, -43.6])
-        self.set_position([180.0, -105.0, 236.8, -178.8, -1.1, -43.6])
+        self.set_position([180.0, -105.0, 280, -178.8, -1.1, -43.6])
+        self.set_position([180.0, -105.0, 267.9, -178.8, -1.1, -43.6])
 
         # Run gcode file
         if not self.params["quit"]:
