@@ -393,7 +393,7 @@ class XArmCtrler(object):
 
         # Move to above the whiteboard and ready to draw
         self.set_position([180.0, -105.0, 280, -178.8, -1.1, -43.6])
-        self.set_position([180.0, -105.0, 267.9, -178.8, -1.1, -43.6])
+        self.set_position([180.0, -105.0, 272, -178.8, -1.1, -43.6])
 
         # Run gcode file
         if not self.params["quit"]:

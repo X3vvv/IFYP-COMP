@@ -99,7 +99,7 @@ def say_goodbye():
 def main():
     """Main function."""
     xArm = XArmCtrler("192.168.1.210")
-    word = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    word = "WRITINGHEIGHT Z267.9 ABOVEHEIGHT Z280"
     xArm.write(word)
     #xArm.erase()
     """
