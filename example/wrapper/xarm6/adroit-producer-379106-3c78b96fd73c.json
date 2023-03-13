@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "adroit-producer-379106",
+  "private_key_id": "3c78b96fd73cd1518cfd8773a0f1bae681a4754b",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCuGgL6hKsadgUT\n4beICkPlbbZiF4IX9MLxp7m1DSOaRaUDvOaSpXMlADiiyXXSCe5fjedAB8jasVSM\nivV4g6MAJA+BIs3VWYqfRClZLhWSGydWW+FwAPtRMEobtTb5S+8n9/dvhA7eXWvQ\nI/R3byVSm2C+Uggo9vBcYpz6r/YogWE2ho1UIAKPCoyIMK1iVuJebCLVBan2HXoM\njIGXWlSk0a3TzpRUdF26+ExhomcZ/cV4r5lax2pY2JxXhOrb49cA+6VnnaQCsFek\n1vKu78d1dT+WRmsxtPgn6zLgLLSkii8uMdSRBcqsIswMtF79jrjRO98U1S2ODIDo\nSvVGdb4pAgMBAAECggEAKLTGO4KnatFrUIG24qTbyRnEydyLO0SsC8pWfkFrMJfW\nBDC3jFQIvv71PwJxfMF7rXXFOtBXIuLRTOb0i8/jXZYQ1fWoQJjl82UBcet3eajF\noshqxkBEgnAS87WD+/fIHAU7IiSzQUSAf7LYZtBi3pSbowQVClbqTf90ipx3pnJu\nZdW3yUbA+LkIrf1vlhF6r1ad7sDFZX+/ISJ6uNaYr8OM21pjiZDZsu/UsbwcEh8G\nkwSMChXQkPSRYMUI8O/XiMgX2nRugV38w1WFeo1SI7jp5KqVTKUpG34N3qthskng\nrI0cwEz9VlC4p6tdn2gMKpaRTjKaWpdJnxU8/VoKrQKBgQDp39TasoFZRQkBQO2e\nLJ0Q3qM35PtcmXJz/4Tq7y04bztgEFd7KExaHhoc3ccFPNj4elsqrYXPimQ0YmqE\nNymiJBDAUoMCBNuJW+md0RiHSuNmzF0XfjpK9ZP1CJ31eThTJ1OgWD8MptTLQsru\nFPje5xgkRiWFy7ItSiyqum2iEwKBgQC+ko2VccdjespFV8Q1/rEzo3uClIIOCcyk\n5vYMc7pXdnTDOz/qz8K3NzKPyZyRSnjgAVXElwFOPhaKhLV2bpV6Ebv86f7VSPzI\ng/96dLUj6gev5a/joJe7547WC+34VD36l+M2BOwjbTQ5jWHkm5Ju9opg9iY/muWo\nogezxiNGUwKBgQDf/FzxLzCufG2JY9OvP28V7wRGzejm4Jc6/SchkfuvJuiosj32\nV7v4OwgrSUQIgiQSpayWjSWwhQw/F1qIUgRvozbf2qZZ0qknPn3ZhZ6GRHTRyTwG\n+f9+NwCDFsOhi30kNm/jC2EnDsiR+uA7cJ6BbLY0V3IsV8/HjFiHEpFZPQKBgQCA\nar0hkTQs4tdeds/vGptKEsXtrikdUJkoHcJ7jZhpy5bO4CQoFKw/TeCyZ8crWKWv\nPPcQrDjjAo+p89db4RS01zJ4MS3Zh39flyMW34IYm2FmtD4cA2F764Oi1RMcnZfO\nP3+KLTL6hGIGzjDDHdpFD7kbsYMApV5Qji7mg4PNpQKBgEwvuV37onevV/D2h4vX\nXOhL8fHYPob6Wmt5RhAwnXXoyfVeE4bZuJG3EnHQR5HGaiXgTu9/uBgqcJbyALe5\n9f9Rv74+yHXs1HsalmaBCFYkcBuRWx3wue75Bk3sLyft0+pJi37wszfvdOVRa0wI\nrBG3qDWMrwYUODkNhNn1Hraq\n-----END PRIVATE KEY-----\n",
+  "client_email": "app-text-speech@adroit-producer-379106.iam.gserviceaccount.com",
+  "client_id": "107610489513312543866",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/app-text-speech%40adroit-producer-379106.iam.gserviceaccount.com"
+}

@@ -319,20 +319,29 @@ class XArmCtrler(object):
 
         # Capture one frame
         ret, mat_img = cap.read()
+
+        height, width = mat_img.shape[:2]
+
+        M = cv2.getRotationMatrix2D((width / 2, height / 2), 90, 1)
+
+        rotated_img = cv2.warpAffine(mat_img, M, (height, width))
+
+        cv2.imwrite("Drawing_Image.jpg", rotated_img)
+
         if not ret:
             pprint("Unable to capture image")
 
-        return mat_img
+        return rotated_img
 
-    def extract_canny_edge(self, mat_img):
+    def extract_canny_edge(self, rotated_img):
         """Extract the Canny edge from a image matrix and save it to a gcode file."""
         # Process image
         resized = cv2.resize(
-            mat_img, None, fx=0.3, fy=0.3, interpolation=cv2.INTER_AREA
+            rotated_img, None, fx=0.3, fy=0.3, interpolation=cv2.INTER_AREA
         )
         gray_cropped = cv2.cvtColor(resized, cv2.COLOR_BGR2GRAY)  # Convert to grayscale
         blur = cv2.GaussianBlur(gray_cropped, (5, 5), 0)  # Apply Gaussian smoothing
-        edges = cv2.Canny(blur, 50, 0)  # Apply the Canny edge detector
+        edges = cv2.Canny(blur, 20, 40)  # Apply the Canny edge detector
 
         # Find the contours in the image
         contours, hierarchy = cv2.findContours(
@@ -350,7 +359,7 @@ class XArmCtrler(object):
             for point in contour[1:]:
                 x, y = point[0]
                 gcode_lines.append(
-                    f"G1 X{x+100} Y{y+60} Z267.9 F100"
+                    f"G1 X{x+110} Y{y-165} Z267.9 F100"
                 )  # Cutting command with depth of cut and feed rate
 
         # Save the G-code to file

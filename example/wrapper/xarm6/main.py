@@ -5,10 +5,10 @@ import random
 import os
 from xarm_controller import XArmCtrler, pprint
 
-openai.api_key_path = r"D:\OneDrive - The Hong Kong Polytechnic University\Interests\cloud_Codes\Python\openai_api_key"
+openai.api_key = "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"
 os.environ[
     "GOOGLE_APPLICATION_CREDENTIALS"
-] = r"D:\OneDrive - The Hong Kong Polytechnic University\study\y4s1\COMP4913 FYP\workspace\fyp-379707-1c7ab72d6756.json"
+] = r"adroit-producer-379106-3c78b96fd73c.json"
 
 
 def get_command(user_input: str):
