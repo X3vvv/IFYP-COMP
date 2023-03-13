@@ -46,6 +46,11 @@ class XArmCtrler(object):
     GRIPPER_POSITION_CLOSE_ERASER = 303
     GRIPPER_POSITION_CLOSE_COMPLETELY = 0
 
+    BRUSH_PEN_POSITION_ABOVE_HEIGHT = 355
+    BRUSH_PEN_POSITION_ABOVE_WHITEBOARD_HEIGHT = 275
+    BRUSH_PEN_POSITION_HEIGHT = 269  # drawing height 268 and above whiteboard height can be 280
+
+    ERASER_POSITION_ABOVE_HEIGHT = 365
 
     params = None
 
@@ -206,31 +211,27 @@ class XArmCtrler(object):
 
     def grab_pen(self):
         """Grab pen."""
-        WHITEBOARD_PEN_POSITION_ABOVE_HEIGHT = 315.5
-        WHITEBOARD_PEN_POSITION_HEIGHT = 244.4
-        BRUSH_PEN_POSITION_ABOVE_HEIGHT = 350
-        BRUSH_PEN_POSITION_HEIGHT = 270
-
         pprint("Grabbing pen...")
         # Move to above of pen
-        self.set_position([238.3, 226.4, WHITEBOARD_PEN_POSITION_ABOVE_HEIGHT, -179.8, -0.5, -46.3])
+        self.set_position([238.3, 226.4, self.BRUSH_PEN_POSITION_ABOVE_HEIGHT, -179.8, -0.5, -46.3])
         # Open gripper
         self.set_gripper_position(self.GRIPPER_POSITION_OPEN)
         # Move down gripper to surround pen
-        self.set_position([239.1, 226.9, WHITEBOARD_PEN_POSITION_HEIGHT, -179.5, -0.5, -46.3])
+        self.set_position([239.1, 226.9, self.BRUSH_PEN_POSITION_HEIGHT, -179.5, -0.5, -46.3])
         self.set_tcp_load(0.82, [0, 0, 48])
         # Close gripper
         self.set_gripper_position(self.GRIPPER_POSITION_CLOSE_PEN)
         self.set_tcp_load(0, [0, 0, 0])
         # Move up above pen home location
-        self.set_position([238.3, 226.4, 316.5, -179.8, -0.5, -46.3])
+        self.set_position([238.3, 226.4, 360, -179.8, -0.5, -46.3])
         # Move to above whiteboard
-        self.set_position([157.2, 8.4, 272.4, -179.6, -0.5, -46.4])
+        self.set_position([157.2, 8.4, 275, -179.6, -0.5, -46.4])
 
     def grab_eraser(self):
         pprint("Grabing eraser...")
         # Move to above the eraser
-        self.set_position([220.5, 306.0, 353.1, -179.6, -0.5, -46.4])
+        self.set_position([157.2, 8.4, self.ERASER_POSITION_ABOVE_HEIGHT, -179.6, -0.5, -46.4])
+        self.set_position([220.5, 306.0, self.ERASER_POSITION_ABOVE_HEIGHT, -179.6, -0.5, -46.4])
         # Open gripper
         self.set_gripper_position(self.GRIPPER_POSITION_OPEN_ERASER)
         # Move down gripper to surround eraser
@@ -242,9 +243,9 @@ class XArmCtrler(object):
     def move_eraser_to_whiteboard(self):
         pprint("Moving eraser to whiteboard...")
         # Move above eraser home
-        self.set_position([220.5, 306.0, 353.1, -179.6, -0.5, -46.4])
+        self.set_position([220.5, 306.0, self.ERASER_POSITION_ABOVE_HEIGHT, -179.6, -0.5, -46.4])
         # Move to above whiteboard at erasing start location
-        self.set_position([187.1, 111.5, 323.6, -179.6, -0.5, -46.4])
+        self.set_position([187.1, 111.5, self.ERASER_POSITION_ABOVE_HEIGHT, -179.6, -0.5, -46.4])
 
     def clean_whiteboard(self):
         pprint("Cleaning whiteboard...")
@@ -279,16 +280,16 @@ class XArmCtrler(object):
     def put_back_eraser(self):
         pprint("Putting back eraser...")
         # Move above whiteboard eraser final cleaning location
-        self.set_servo_angle([-23.2, -30.8, -26.6, 0.2, 56.8, 23.0])
+        self.set_position([282.8, -121, self.ERASER_POSITION_ABOVE_HEIGHT, -179.6, -0.5, -46.3])
         # Move above the eraser home location
-        self.set_servo_angle([54.3, -17.5, -42.4, -0.7, 59.6, 101.1])
+        self.set_position([220.5, 306.0, self.ERASER_POSITION_ABOVE_HEIGHT, -179.6, -0.5, -46.4])
         # Go done near the table at eraser home
-        self.set_servo_angle([54.2, 5.0, -31.6, -1.3, 26.3, 101.8])
+        self.set_position([220.2, 306.3, 177.6, -179.6, -0.5, -46.4])
         # Open the gripper
         self.set_gripper_position(self.GRIPPER_POSITION_OPEN)
         self.set_tcp_load(0.82, [0, 0, 48])
         # Move above eraser home
-        self.set_servo_angle([54.3, -17.5, -42.4, -0.7, 59.6, 101.1])
+        self.set_position([220.5, 306.0, self.ERASER_POSITION_ABOVE_HEIGHT, -179.6, -0.5, -46.4])
 
     def put_back_pen(self):
         pprint("Putting back pen...")
@@ -296,13 +297,17 @@ class XArmCtrler(object):
             self.arm.set_world_offset([0, 0, 0, 0, 0, 0])
             self.arm.set_state(0)
             time.sleep(0.5)
-        self.set_servo_angle([43.6, -25.0, -29.6, -0.6, 54.4, 90.2])
-        self.set_servo_angle([43.6, -19.9, -25.7, -0.7, 45.4, 90.3])
-        self.set_servo_angle([43.6, -18.3, -24.9, -0.7, 43.0, 90.3])
-        self.set_gripper_position(self.GRIPPER_POSITION_OPEN)
-        self.set_tcp_load(0.82, [0, 0, 48])
-        self.set_servo_angle([43.6, -26.6, -31.6, -0.6, 58.0, 90.2])
-        self.set_servo_angle([2.5, -79.7, 3.0, -0.1, 76.2, 48.9])
+            # Move to above of pen
+            self.set_position([238.3, 226.4, self.BRUSH_PEN_POSITION_ABOVE_HEIGHT, -179.8, -0.5, -46.3])
+            # Move down gripper to surround pen
+            self.set_position([239.1, 226.9, self.BRUSH_PEN_POSITION_HEIGHT, -179.5, -0.5, -46.3])
+            # Open gripper
+            self.set_gripper_position(self.GRIPPER_POSITION_OPEN)
+            self.set_tcp_load(0, [0, 0, 0])
+            # Move up above pen home location
+            self.set_position([238.3, 226.4, 360, -179.8, -0.5, -46.3])
+            # Move to above whiteboard
+            self.set_position([157.2, 8.4, 275, -179.6, -0.5, -46.4])
 
     def capture_a_frame(self, cap=None):
         """Capture a frame from the cam and return the image matrix."""
@@ -443,7 +448,7 @@ class XArmCtrler(object):
                     time.sleep(0.5)
 
                 # Move arm to next letter position
-                self.set_position([180.0, -105.0, 245.0, -178.8, -1.1, -43.6])
+                self.set_position([180.0, -105.0, self.BRUSH_PEN_POSITION_ABOVE_WHITEBOARD_HEIGHT, -178.8, -1.1, -43.6])
 
             def writing_duration(character):
                 # a4 b5 c3 d5 e3 f4 g7 h3 i2 j3 k3 l2 m7 n3 o3 p4 q5 r3 s3 t3 u4 v3 w3 x3 y3 z2
