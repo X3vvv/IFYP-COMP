@@ -18,6 +18,8 @@ from PyQt5.QtWidgets import (
 
 from xarm_controller import XArmCtrler, pprint
 
+from main import speak
+
 
 """
 Documentation can be found [here](https://doc.qt.io/qtforpython/index.html)
@@ -40,6 +42,7 @@ class InitThread(QThread):
 
     def run(self):
         self.arm_ctrl = XArmCtrler()
+        speak("xArm connected")
         self.arm_ctrl_created.emit()
 
     @property
@@ -56,6 +59,7 @@ class PaintThread(QThread):
         self.video_capture = video_capture
 
     def run(self):
+        speak("Start painting")
         self.arm_ctrl.paint(self.video_capture)
         self.finished.emit()
 
@@ -279,11 +283,14 @@ class VideoStreamer(QMainWindow):
         self.enable_function_widgets(False)
         self.paint_btn.setText(self.PAINT_BTN_TEXT_PAINTING)
 
+        speak("Say cheeze")
         self.paintThread = PaintThread(self.arm_ctrl, self.video)
         self.paintThread.finished.connect(cleanup)
         self.paintThread.start()
 
     def arm_erase(self):
+        speak("Start erasing")
+
         def cleanup():
             self.enable_function_widgets(True)
             self.erase_btn.setText(self.ERASE_BTN_TEXT_NORMAL)
@@ -296,6 +303,8 @@ class VideoStreamer(QMainWindow):
         self.eraseThread.start()
 
     def arm_write(self, text: str):
+        speak("Start writing")
+
         def cleanup():
             self.enable_function_widgets(True)
             self.write_btn.setText(self.WRITE_BTN_TEXT_NORMAL)
@@ -308,6 +317,8 @@ class VideoStreamer(QMainWindow):
         self.writeThread.start()
 
     def arm_reset_location_and_gripper(self):
+        speak("Resetting arm")
+
         def cleanup():
             self.enable_function_widgets(True)
             self.reset_btn.setText(self.RESET_BTN_TEXT_NORMAL)
@@ -329,6 +340,7 @@ class VideoStreamer(QMainWindow):
             # Restore disconnect button text and enable connect button
             self.disconnect_arm_btn.setText(self.DISCONNECT_BTN_TEXT_NORMAL)
             self.connect_arm_btn.setEnabled(True)
+            speak("xArm disconnected")
 
         switch_btn_state()  # immediately disable all buttons but connect button
         self.disconnect_arm_btn.setText(self.DISCONNECT_BTN_TEXT_DISCONNECTING)

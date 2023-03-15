@@ -42,15 +42,19 @@ class XArmCtrler(object):
     # Arm movement measurement size
     GRIPPER_POSITION_OPEN = 420
     GRIPPER_POSITION_OPEN_ERASER = 500
-    GRIPPER_POSITION_CLOSE_PEN = 95
+    GRIPPER_POSITION_CLOSE_PEN = 80
     GRIPPER_POSITION_CLOSE_ERASER = 303
     GRIPPER_POSITION_CLOSE_COMPLETELY = 0
 
     BRUSH_PEN_POSITION_ABOVE_HEIGHT = 355
     BRUSH_PEN_POSITION_ABOVE_WHITEBOARD_HEIGHT = 275
-    BRUSH_PEN_POSITION_HEIGHT = 270.3  # drawing height 268 and above whiteboard height can be 280
+    BRUSH_PEN_POSITION_HEIGHT = (
+        270.5  # drawing height 268 and above whiteboard height can be 280
+    )
 
     ERASER_POSITION_ABOVE_HEIGHT = 365
+    INIT_ARM_X = 0
+    INIT_ARM_Y = -2
 
     params = None
 
@@ -96,8 +100,8 @@ class XArmCtrler(object):
         if not self.params["quit"]:
             self.params["speed"] = 100
             self.params["acc"] = 2000
-            self.params["variables"]["Center_x"] = -0.5
-            self.params["variables"]["Center_y"] = -2
+            self.params["variables"]["Center_x"] = self.INIT_ARM_X
+            self.params["variables"]["Center_y"] = self.INIT_ARM_Y
             self.params["variables"]["Offset_x"] = (
                 self.params["variables"].get("Center_x", 0) * -40
             )
@@ -187,7 +191,7 @@ class XArmCtrler(object):
                 speed=self.params["speed"],
                 mvacc=self.params["acc"],
                 radius=-1.0,
-                wait=True
+                wait=True,
             )
             if code != 0:
                 self.params["quit"] = True
@@ -213,11 +217,15 @@ class XArmCtrler(object):
         """Grab pen."""
         pprint("Grabbing pen...")
         # Move to above of pen
-        self.set_position([238.3, 226.4, self.BRUSH_PEN_POSITION_ABOVE_HEIGHT, -179.8, -0.5, -46.3])
+        self.set_position(
+            [238.3, 226.4, self.BRUSH_PEN_POSITION_ABOVE_HEIGHT, -179.8, -0.5, -46.3]
+        )
         # Open gripper
         self.set_gripper_position(self.GRIPPER_POSITION_OPEN)
         # Move down gripper to surround pen
-        self.set_position([239.1, 226.9, self.BRUSH_PEN_POSITION_HEIGHT, -179.5, -0.5, -46.3])
+        self.set_position(
+            [239.1, 226.9, self.BRUSH_PEN_POSITION_HEIGHT, -179.5, -0.5, -46.3]
+        )
         self.set_tcp_load(0.82, [0, 0, 48])
         # Close gripper
         self.set_gripper_position(self.GRIPPER_POSITION_CLOSE_PEN)
@@ -230,8 +238,12 @@ class XArmCtrler(object):
     def grab_eraser(self):
         pprint("Grabing eraser...")
         # Move to above the eraser
-        self.set_position([157.2, 8.4, self.ERASER_POSITION_ABOVE_HEIGHT, -179.6, -0.5, -46.4])
-        self.set_position([220.5, 306.0, self.ERASER_POSITION_ABOVE_HEIGHT, -179.6, -0.5, -46.4])
+        self.set_position(
+            [157.2, 8.4, self.ERASER_POSITION_ABOVE_HEIGHT, -179.6, -0.5, -46.4]
+        )
+        self.set_position(
+            [220.5, 306.0, self.ERASER_POSITION_ABOVE_HEIGHT, -179.6, -0.5, -46.4]
+        )
         # Open gripper
         self.set_gripper_position(self.GRIPPER_POSITION_OPEN_ERASER)
         # Move down gripper to surround eraser
@@ -243,11 +255,16 @@ class XArmCtrler(object):
     def move_eraser_to_whiteboard(self):
         pprint("Moving eraser to whiteboard...")
         # Move above eraser home
-        self.set_position([220.5, 306.0, self.ERASER_POSITION_ABOVE_HEIGHT, -179.6, -0.5, -46.4])
+        self.set_position(
+            [220.5, 306.0, self.ERASER_POSITION_ABOVE_HEIGHT, -179.6, -0.5, -46.4]
+        )
         # Move to above whiteboard at erasing start location
-        self.set_position([187.1, 111.5, self.ERASER_POSITION_ABOVE_HEIGHT, -179.6, -0.5, -46.4])
+        self.set_position(
+            [187.1, 111.5, self.ERASER_POSITION_ABOVE_HEIGHT, -179.6, -0.5, -46.4]
+        )
 
     def clean_whiteboard(self):
+        ERASER_CLEAN_HEIGHT = 183
         pprint("Cleaning whiteboard...")
         self.set_position([187.2, -171.8, 189.7, -179.6, -0.5, -46.4])
         # Move eraser to touch the new whitebroad
@@ -256,40 +273,41 @@ class XArmCtrler(object):
         for _ in range(2):
             if self.params["quit"]:
                 break
-            self.set_position([187.2, 159.1, 185.5, -179.6, -0.5, -46.4])
-            self.set_position([187.2, -171.8, 185.5, -179.6, -0.5, -46.4])
-        self.set_position([224.5, -171.8, 185.5, -179.6, -0.5, -46.4])
+            self.set_position([187.2, 159.1, ERASER_CLEAN_HEIGHT, -179.6, -0.5, -46.4])
+            self.set_position([187.2, -171.8, ERASER_CLEAN_HEIGHT, -179.6, -0.5, -46.4])
+        self.set_position([224.5, -171.8, ERASER_CLEAN_HEIGHT, -179.6, -0.5, -46.4])
         for _ in range(2):
             if self.params["quit"]:
                 break
-            self.set_position([224.5, 159.1, 185.5, -179.6, -0.5, -46.4])
-            self.set_position([224.5, -171.8, 185.5, -179.6, -0.5, -46.4])
-        self.set_position([274.5, -171.8, 185.5, -179.6, -0.5, -46.4])
+            self.set_position([224.5, 159.1, ERASER_CLEAN_HEIGHT, -179.6, -0.5, -46.4])
+            self.set_position([224.5, -171.8, ERASER_CLEAN_HEIGHT, -179.6, -0.5, -46.4])
+        self.set_position([274.5, -171.8, ERASER_CLEAN_HEIGHT, -179.6, -0.5, -46.4])
         for _ in range(2):
             if self.params["quit"]:
                 break
-            self.set_position([274.5, 159.1, 185.5, -179.6, -0.5, -46.4])
-            self.set_position([274.5, -171.8, 185.5, -179.6, -0.5, -46.4])
-        self.set_position([305.3, -171.8, 185.5, -179.6, -0.5, -46.4])
-        for _ in range(2):
-            if self.params["quit"]:
-                break
-            self.set_position([305.3, 159.1, 185.5, -179.6, -0.5, -46.4])
-            self.set_position([305.3, -171.8, 185.5, -179.6, -0.5, -46.4])
+            self.set_position([274.5, 159.1, ERASER_CLEAN_HEIGHT, -179.6, -0.5, -46.4])
+            self.set_position([274.5, -171.8, ERASER_CLEAN_HEIGHT, -179.6, -0.5, -46.4])
+        self.set_position([305.3, -171.8, ERASER_CLEAN_HEIGHT, -179.6, -0.5, -46.4])
 
     def put_back_eraser(self):
         pprint("Putting back eraser...")
         # Move above whiteboard eraser final cleaning location
-        self.set_position([282.8, -121, self.ERASER_POSITION_ABOVE_HEIGHT, -179.6, -0.5, -46.3])
+        self.set_position(
+            [282.8, -121, self.ERASER_POSITION_ABOVE_HEIGHT, -179.6, -0.5, -46.3]
+        )
         # Move above the eraser home location
-        self.set_position([220.5, 306.0, self.ERASER_POSITION_ABOVE_HEIGHT, -179.6, -0.5, -46.4])
+        self.set_position(
+            [220.5, 306.0, self.ERASER_POSITION_ABOVE_HEIGHT, -179.6, -0.5, -46.4]
+        )
         # Go done near the table at eraser home
         self.set_position([220.2, 306.3, 177.6, -179.6, -0.5, -46.4])
         # Open the gripper
         self.set_gripper_position(self.GRIPPER_POSITION_OPEN)
         self.set_tcp_load(0.82, [0, 0, 48])
         # Move above eraser home
-        self.set_position([220.5, 306.0, self.ERASER_POSITION_ABOVE_HEIGHT, -179.6, -0.5, -46.4])
+        self.set_position(
+            [220.5, 306.0, self.ERASER_POSITION_ABOVE_HEIGHT, -179.6, -0.5, -46.4]
+        )
 
     def put_back_pen(self):
         pprint("Putting back pen...")
@@ -298,9 +316,20 @@ class XArmCtrler(object):
             self.arm.set_state(0)
             time.sleep(0.5)
             # Move to above of pen
-            self.set_position([238.3, 226.4, self.BRUSH_PEN_POSITION_ABOVE_HEIGHT, -179.8, -0.5, -46.3])
+            self.set_position(
+                [
+                    238.3,
+                    226.4,
+                    self.BRUSH_PEN_POSITION_ABOVE_HEIGHT,
+                    -179.8,
+                    -0.5,
+                    -46.3,
+                ]
+            )
             # Move down gripper to surround pen
-            self.set_position([239.1, 226.9, self.BRUSH_PEN_POSITION_HEIGHT, -179.5, -0.5, -46.3])
+            self.set_position(
+                [239.1, 226.9, self.BRUSH_PEN_POSITION_HEIGHT, -179.5, -0.5, -46.3]
+            )
             # Open gripper
             self.set_gripper_position(self.GRIPPER_POSITION_OPEN)
             self.set_tcp_load(0, [0, 0, 0])
@@ -380,7 +409,7 @@ class XArmCtrler(object):
         if not self.params["quit"]:
             # Modify the coordinate you want:
             self.params["variables"]["Center_x"] = 1
-            self.params["variables"]["Center_y"] = 4
+            self.params["variables"]["Center_y"] = 3
             self.params["variables"]["Offset_x"] = (
                 self.params["variables"].get("Center_x", 0) * -40
             )
@@ -457,14 +486,77 @@ class XArmCtrler(object):
                     time.sleep(0.5)
 
                 # Move arm to next letter position
-                self.set_position([180.0, -105.0, self.BRUSH_PEN_POSITION_ABOVE_WHITEBOARD_HEIGHT, -178.8, -1.1, -43.6])
+                self.set_position(
+                    [
+                        180.0,
+                        -105.0,
+                        self.BRUSH_PEN_POSITION_ABOVE_WHITEBOARD_HEIGHT,
+                        -178.8,
+                        -1.1,
+                        -43.6,
+                    ]
+                )
 
             def writing_duration(character):
-                LIST_Sec_7 = ['G','B','Q','g','m','8']
-                LIST_Sec_5 = ['H','O','S','R','b','d','q','a','p','3','5','6','0','9','D','I']
-                LIST_Sec_4 = ['F','A','C','E','M','U','W','K','P','Y','f','u','e','h','n','o','t','k','X','2']
-                LIST_Sec_3 = ['J','T','N','Z','c','j','r','s','v','w','x','y','i','1','4']
-                LIST_Sec_2 = ['L','V','l','z','!',',','.','7']
+                LIST_Sec_7 = ["G", "B", "Q", "g", "m", "8"]
+                LIST_Sec_5 = [
+                    "H",
+                    "O",
+                    "S",
+                    "R",
+                    "b",
+                    "d",
+                    "q",
+                    "a",
+                    "p",
+                    "3",
+                    "5",
+                    "6",
+                    "0",
+                    "9",
+                    "D",
+                    "I",
+                ]
+                LIST_Sec_4 = [
+                    "F",
+                    "A",
+                    "C",
+                    "E",
+                    "M",
+                    "U",
+                    "W",
+                    "K",
+                    "P",
+                    "Y",
+                    "f",
+                    "u",
+                    "e",
+                    "h",
+                    "n",
+                    "o",
+                    "t",
+                    "k",
+                    "X",
+                    "2",
+                ]
+                LIST_Sec_3 = [
+                    "J",
+                    "T",
+                    "N",
+                    "Z",
+                    "c",
+                    "j",
+                    "r",
+                    "s",
+                    "v",
+                    "w",
+                    "x",
+                    "y",
+                    "i",
+                    "1",
+                    "4",
+                ]
+                LIST_Sec_2 = ["L", "V", "l", "z", "!", ",", ".", "7"]
                 if character in LIST_Sec_7:
                     return 7
                 elif character in LIST_Sec_5:
@@ -480,7 +572,7 @@ class XArmCtrler(object):
 
             def write_with_gcode(character: str):
                 if character.isspace():  # skip spaces
-                    update_arm_position() #move arm to next letter's position
+                    update_arm_position()  # move arm to next letter's position
                     return
                 folder_name = "Letters" if character.isupper() else "sletter"
                 file_name = r".\assets\gcode\{}\{}.nc".format(folder_name, character)
@@ -508,6 +600,8 @@ class XArmCtrler(object):
                     self.params["variables"]["Center_x"] += 1  # go to next line
                     self.params["variables"]["Center_y"] = -2  # go to first pos in line
 
+        text = text.upper()
+
         if not self.params["quit"]:
             self.arm.set_world_offset([0, 0, 0, 0, 0, 0])
             self.arm.set_state(0)
@@ -518,8 +612,8 @@ class XArmCtrler(object):
 
         # Top-Left coordinate(-1,-2) to (3,10) reference point, modify the coordinate you want:
         if not self.params["quit"]:
-            self.params["variables"]["Center_x"] = -0.5
-            self.params["variables"]["Center_y"] = -2
+            self.params["variables"]["Center_x"] = self.INIT_ARM_X
+            self.params["variables"]["Center_y"] = self.INIT_ARM_Y
 
         writing()
         self.put_back_pen()

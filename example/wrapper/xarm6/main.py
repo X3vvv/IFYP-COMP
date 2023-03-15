@@ -5,10 +5,14 @@ import random
 import os
 from xarm_controller import XArmCtrler, pprint
 
-openai.api_key = "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"
+# openai.api_key = "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"
+openai.api_key_path = r"D:\OneDrive - The Hong Kong Polytechnic University\Interests\cloud_Codes\Python\openai_api_key"
+# os.environ[
+#     "GOOGLE_APPLICATION_CREDENTIALS"
+# ] = r"adroit-producer-379106-3c78b96fd73c.json"
 os.environ[
     "GOOGLE_APPLICATION_CREDENTIALS"
-] = r"adroit-producer-379106-3c78b96fd73c.json"
+] = r"D:\OneDrive - The Hong Kong Polytechnic University\study\y4s1\COMP4913 FYP\workspace\fyp-379707-1c7ab72d6756.json"
 
 
 def get_command(user_input: str):
@@ -20,6 +24,7 @@ def get_command(user_input: str):
         pprint("Connecting to ChatGPT...")
 
         with open("chatGPT-pretrain.txt", "r") as f:
+            # with open("prompt perfect revised text.txt", "r") as f:
             pretrain_prompt = f.read()
 
         apologize_list = [
@@ -76,7 +81,7 @@ def get_command(user_input: str):
 
 def speech2text():
     """Convert speech to text."""
-    SpeechToText.main()
+    return SpeechToText.main()
 
 
 def speak(text, end="\n"):
@@ -107,13 +112,13 @@ def say_goodbye():
 
 def main():
     """Main function."""
-    # xArm = XArmCtrler("192.168.1.210")
+    xArm = XArmCtrler("192.168.1.210")
 
     try:
         speak("Hi, I'm xArm. What can I do for you?")
         # Word spliter function demonstration
         while True:
-            user_words = speech2text
+            user_words = speech2text()
             pprint("You said: {}".format(user_words))
 
             # Ask ChatGPT to generate a command
@@ -130,20 +135,20 @@ def main():
                     else "Start erasing!"
                 )
                 speak(prompt)
-                # xArm.erase()
+                xArm.erase()
                 XArmCtrler.WHITEBOARD_IS_FULL = False
                 speak("Finish erasing! What else can I do for you?")
             elif cmd == XArmCtrler.PAINT:
                 speak("Cheeze!")
-                # xArm.paint()
+                xArm.paint()
                 speak("Finish painting! What else can I do for you?")
             elif cmd == XArmCtrler.WRITE:
                 speak("Start writing!")
-                # xArm.write(cmd_param)
+                xArm.write(cmd_param)
                 speak("Finish writing! What else can I do for you?")
             elif cmd == XArmCtrler.RESET:
                 speak("Resetting...")
-                # xArm.reset_arm()
+                xArm.reset_arm()
                 speak("Reset successfully! What else can I do for you?")
             elif cmd == XArmCtrler.NORMAL_CHAT:
                 speak(cmd_param)
