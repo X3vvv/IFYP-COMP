@@ -36,14 +36,19 @@ Reference:
 
 class InitThread(QThread):
     arm_ctrl_created = pyqtSignal()
+    connection_error = pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
 
     def run(self):
-        self.arm_ctrl = XArmCtrler()
-        speak("xArm connected")
-        self.arm_ctrl_created.emit()
+        try:
+            self.arm_ctrl = XArmCtrler()
+            speak("xArm connected")
+            self.arm_ctrl_created.emit()
+        except Exception as e:
+            speak("Connection failed, xArm is not yet ready")
+            self.connection_error.emit()
 
     @property
     def get_arm_ctrl(self):
@@ -265,12 +270,17 @@ class VideoStreamer(QMainWindow):
         def set_arm_ctrl():
             self.arm_ctrl = self.initThread.arm_ctrl
 
+        def connection_error_handler():
+            self.connect_arm_btn.setEnabled(True)
+            self.connect_arm_btn.setText(self.CONNECT_BTN_TEXT_NORMAL)
+
         self.connect_arm_btn.setEnabled(False)
         self.connect_arm_btn.setText(self.CONNECT_BTN_TEXT_CONNECTING)
 
         self.initThread = InitThread()
         self.initThread.arm_ctrl_created.connect(set_arm_ctrl)
         self.initThread.arm_ctrl_created.connect(cleanup)
+        self.initThread.connection_error.connect(connection_error_handler)
         self.initThread.start()
 
         pprint("xArm connected")
